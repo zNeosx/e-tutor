@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+  INSTRUCTOR
+}
+
+model User {
+  id                 String       @id @default(cuid())
+  firstName          String       @map("first_name")
+  lastName           String       @map("last_name")
+  userName           String       @unique @map("user_name")
+  email              String       @unique
+  emailVerified      DateTime?    @map("email_verified")
+  password           String
+  role               UserRole     @default(STUDENT)
+  avatar             String?
+  title              String?
+  isProfileCompleted Boolean?     @default(false) @map("is_profile_completed")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  lastSigned         DateTime?    @map("last_signed")
+  instructor         Instructor?
+  socialLinks        SocialLinks?
+  coursesTaught      Course[]     @relation("CourseToInstructors")
+  coursesCreated     Course[]     @relation("CoursesToUser")
+  reviews            Review[]     @relation("ReviewsToUser")
+
+  @@map("users")
+}
+
+model Instructor {
+  id          String  @id @default(cuid())
+  biography   String?
+  phoneNumber String? @map("phone_number")
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id])
+
+  @@map("instructors")
+}
+
+model SocialLinks {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id])
+  website   String?
+  facebook  String?
+  instagram String?
+  linkedin  String?
+  twitter   String?
+  whatsapp  String?
+  youtube   String?
+  github    String?
+
+  @@map("social_links")
+}
+
+model Category {
+  id                   String   @id @default(cuid())
+  name                 String   @unique
+  icon                 String
+  color                String
+  coursesAsCategory    Course[] @relation("CoursesToCategory")
+  coursesAsSubCategory Course[] @relation("CoursesToSubCategory")
+
+  @@map("categories")
+}
+
+model Course {
+  id                     String          @id @default(cuid())
+  title                  String
+  subtitle               String
+  categoryId             String
+  category               Category        @relation("CoursesToCategory", fields: [categoryId], references: [id])
+  subCategoryId          String?
+  subCategory            Category?       @relation("CoursesToSubCategory", fields: [subCategoryId], references: [id])
+  topic                  String
+  languageId             String
+  language               Language        @relation("CoursesToLanguage", fields: [languageId], references: [id])
+  subLanguageId          String?
+  subLanguage            Language?       @relation("CoursesToSubLanguage", fields: [subLanguageId], references: [id])
+  level                  CourseLevel
+  duration               Int
+  durationUnit           DurationUnit
+  thumbnail              String
+  trailer                String
+  description            String
+  whatYouWillLearn       String[]
+  targetAudience         String[]
+  requirements           String[]
+  instructors            User[]          @relation("CourseToInstructors")
+  sections               CourseSection[]
+  welcomeMessage         String
+  congratulationsMessage String
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  userId                 String          @unique @map("user_id")
+  user                   User            @relation("CoursesToUser", fields: [userId], references: [id])
+  reviews                Review[]
+  price                  Float?
+  currency               String?         @default("USD")
+
+  @@map("courses")
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum DurationUnit {
+  DAYS
+  MONTHS
+  YEARS
+}
+
+model Language {
+  id                   String   @id @default(cuid())
+  name                 String   @unique
+  code                 String   @unique
+  flag                 String
+  coursesAsLanguage    Course[] @relation("CoursesToLanguage")
+  coursesAsSubLanguage Course[] @relation("CoursesToSubLanguage")
+
+  @@map("languages")
+}
+
+model CourseSection {
+  id       String          @id @default(cuid())
+  name     String
+  courseId String
+  course   Course          @relation(fields: [courseId], references: [id])
+  contents CourseContent[]
+
+  @@map("course_sections")
+}
+
+model CourseContent {
+  id          String        @id @default(cuid())
+  sectionId   String
+  section     CourseSection @relation(fields: [sectionId], references: [id])
+  video       String?
+  file        String?
+  quote       String?
+  description String?
+  lectureNote LectureNote?
+
+  @@map("course_contents")
+}
+
+model LectureNote {
+  id        String        @id @default(cuid())
+  contentId String        @unique
+  content   CourseContent @relation(fields: [contentId], references: [id])
+  text      String
+  file      String?
+
+  @@map("lecture_notes")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  userId    String
+  user      User     @relation("ReviewsToUser", fields: [userId], references: [id])
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, userId]) // Un utilisateur ne peut laisser qu'un seul avis par cours
+}
