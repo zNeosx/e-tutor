@@ -1,7 +1,10 @@
 'use client';
 import { FIELD_NAMES, FIELD_PLACEHOLDERS, FIELD_TYPES } from '@/constants';
+import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight } from '@phosphor-icons/react';
+import { UserRole } from '@prisma/client';
+import { useRouter } from 'next/navigation';
 import {
   DefaultValues,
   FieldValues,
@@ -24,9 +27,6 @@ import {
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import PasswordInput from '../ui/password-input';
-import { toast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { UserRole } from '@prisma/client';
 
 interface Props<T extends FieldValues> {
   type: 'SIGN_UP' | 'SIGN_IN';
@@ -53,6 +53,8 @@ const AuthForm = <T extends FieldValues>({
   });
 
   const handleSubmit: SubmitHandler<T> = async (data: T) => {
+    console.log('data', data);
+    return;
     const result = await onSubmit(data);
 
     if (result.success) {
@@ -97,29 +99,39 @@ const AuthForm = <T extends FieldValues>({
               <FormField
                 control={form.control}
                 name={FIELD_NAMES['firstName'] as Path<T>}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="body-m-400">Full Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        type={FIELD_TYPES['firstName']}
-                        placeholder={FIELD_PLACEHOLDERS['firstName']}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field, fieldState, formState }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel className="body-m-400">Full Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          type={FIELD_TYPES['firstName']}
+                          placeholder={FIELD_PLACEHOLDERS['firstName']}
+                          data-invalid={
+                            formState.isSubmitted
+                              ? fieldState.invalid
+                              : undefined
+                          }
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
                 name={FIELD_NAMES['lastName'] as Path<T>}
-                render={({ field }) => (
+                render={({ field, fieldState, formState }) => (
                   <FormItem>
                     <FormControl>
                       <Input
                         type={FIELD_TYPES['lastName']}
                         placeholder={FIELD_PLACEHOLDERS['lastName']}
+                        data-invalid={
+                          formState.isSubmitted ? fieldState.invalid : undefined
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -144,7 +156,7 @@ const AuthForm = <T extends FieldValues>({
                 key={field}
                 control={form.control}
                 name={field as Path<T>}
-                render={({ field }) => (
+                render={({ field, fieldState, formState }) => (
                   <FormItem>
                     <FormLabel className="capitalize">
                       {FIELD_NAMES[field.name as keyof typeof FIELD_NAMES]}
@@ -155,6 +167,8 @@ const AuthForm = <T extends FieldValues>({
                           type={
                             FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]
                           }
+                          fieldState={fieldState}
+                          formState={formState}
                           placeholder={'********'}
                           withStrengthIndicator={false}
                           field={field}
@@ -168,6 +182,11 @@ const AuthForm = <T extends FieldValues>({
                             FIELD_PLACEHOLDERS[
                               field.name as keyof typeof FIELD_PLACEHOLDERS
                             ]
+                          }
+                          data-invalid={
+                            formState.isSubmitted
+                              ? fieldState.invalid
+                              : undefined
                           }
                           {...field}
                         />
@@ -184,25 +203,29 @@ const AuthForm = <T extends FieldValues>({
               <FormField
                 control={form.control}
                 name={FIELD_NAMES['password'] as Path<T>}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="body-m-400">Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        type={FIELD_TYPES['password']}
-                        placeholder={FIELD_PLACEHOLDERS['password']}
-                        withStrengthIndicator
-                        field={field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field, fieldState, formState }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel className="body-m-400">Password</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          type={FIELD_TYPES['password']}
+                          placeholder={FIELD_PLACEHOLDERS['password']}
+                          withStrengthIndicator
+                          fieldState={fieldState}
+                          formState={formState}
+                          field={field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
                 name={FIELD_NAMES['confirmPassword'] as Path<T>}
-                render={({ field }) => (
+                render={({ field, fieldState, formState }) => (
                   <FormItem>
                     <FormLabel className="body-m-400">
                       Confirm Password
@@ -212,6 +235,8 @@ const AuthForm = <T extends FieldValues>({
                         type={FIELD_TYPES['confirmPassword']}
                         placeholder={FIELD_PLACEHOLDERS['confirmPassword']}
                         withStrengthIndicator={false}
+                        fieldState={fieldState}
+                        formState={formState}
                         field={field}
                       />
                     </FormControl>

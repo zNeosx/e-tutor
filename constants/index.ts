@@ -129,6 +129,12 @@ export const FIELD_PLACEHOLDERS = {
   title: 'Your tittle, proffesion or small biography',
 };
 
+export const PASSWORD_FIELDS = [
+  FIELD_NAMES.password,
+  FIELD_NAMES.confirmPassword,
+  'currentPassword',
+];
+
 export const STUDENT_HEADER_LINKS = [
   {
     name: 'Dashboard',
