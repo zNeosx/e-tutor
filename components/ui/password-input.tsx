@@ -8,7 +8,11 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { ControllerRenderProps } from 'react-hook-form';
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+  UseFormStateReturn,
+} from 'react-hook-form';
 
 interface Props {
   type: string;
@@ -17,6 +21,9 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   field: ControllerRenderProps<any>;
   inputAutoComplete?: HTMLInputAutoCompleteAttribute;
+  fieldState: ControllerFieldState;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formState: UseFormStateReturn<any>;
 }
 
 const PasswordInput = ({
@@ -25,10 +32,11 @@ const PasswordInput = ({
   withStrengthIndicator,
   field,
   inputAutoComplete = 'off',
+  fieldState,
+  formState,
 }: Props) => {
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
-
   const toggleVisibility = () => setIsVisible((prevState) => !prevState);
 
   const checkStrength = (pass: string) => {
@@ -66,6 +74,11 @@ const PasswordInput = ({
     return 'Strong password';
   };
 
+  const isStrengthScoreValid = strengthScore < 4;
+  const isValid = isStrengthScoreValid
+    ? isStrengthScoreValid
+    : fieldState.invalid;
+
   return (
     <div>
       <div className="relative">
@@ -74,8 +87,9 @@ const PasswordInput = ({
           className="pe-9 invalid:border-red-500"
           placeholder={placeholder}
           type={isVisible ? 'text' : type}
-          aria-invalid={strengthScore < 4}
           aria-describedby={`${id}-description`}
+          aria-invalid={formState.isSubmitted ? isValid : undefined}
+          data-invalid={formState.isSubmitted ? isValid : undefined}
           autoComplete={inputAutoComplete}
           {...field}
         />
