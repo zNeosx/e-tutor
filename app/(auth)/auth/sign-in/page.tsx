@@ -1,11 +1,23 @@
 'use client';
 import AuthForm from '@/components/auth/AuthForm';
-import { signInWithCredentials } from '@/lib/actions/auth.action';
 import { signInSchema } from '@/lib/validations';
+import { AuthCredentials } from '@/types';
 import Image from 'next/image';
 import React from 'react';
 
 const SignInPage = () => {
+  const handleSignIn = async (
+    data: Pick<AuthCredentials, 'email' | 'password'>
+  ) => {
+    return await fetch('/api/auth/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  };
+
   return (
     <div className="flex size-full flex-1">
       <div className="relative max-lg:hidden lg:basis-2/5">
@@ -25,7 +37,7 @@ const SignInPage = () => {
               email: '',
               password: '',
             }}
-            onSubmit={signInWithCredentials}
+            onSubmit={handleSignIn}
           />
         </div>
       </div>

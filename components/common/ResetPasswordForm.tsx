@@ -24,9 +24,11 @@ import { cn } from '@/lib/utils';
 const ResetPasswordForm = ({
   user,
   containerClassName,
+  submitBtnClassName,
 }: {
   user: User;
   containerClassName?: string;
+  submitBtnClassName?: string;
 }) => {
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
@@ -76,7 +78,7 @@ const ResetPasswordForm = ({
           <FormField
             control={form.control}
             name={'currentPassword'}
-            render={({ field }) => (
+            render={({ field, fieldState, formState }) => (
               <FormItem>
                 <FormLabel className="body-m-400">Current Password</FormLabel>
                 <FormControl>
@@ -86,6 +88,8 @@ const ResetPasswordForm = ({
                     withStrengthIndicator={false}
                     inputAutoComplete="current-password"
                     field={field}
+                    fieldState={fieldState}
+                    formState={formState}
                   />
                 </FormControl>
                 <FormMessage />
@@ -95,7 +99,7 @@ const ResetPasswordForm = ({
           <FormField
             control={form.control}
             name={'newPassword'}
-            render={({ field }) => (
+            render={({ field, fieldState, formState }) => (
               <FormItem>
                 <FormLabel className="body-m-400">New Password</FormLabel>
                 <FormControl>
@@ -105,6 +109,8 @@ const ResetPasswordForm = ({
                     withStrengthIndicator
                     inputAutoComplete="new-password"
                     field={field}
+                    fieldState={fieldState}
+                    formState={formState}
                   />
                 </FormControl>
                 <FormMessage />
@@ -114,7 +120,7 @@ const ResetPasswordForm = ({
           <FormField
             control={form.control}
             name={'confirmPassword'}
-            render={({ field }) => (
+            render={({ field, fieldState, formState }) => (
               <FormItem>
                 <FormLabel className="body-m-400">Confirm Password</FormLabel>
                 <FormControl>
@@ -123,13 +129,18 @@ const ResetPasswordForm = ({
                     placeholder={'********'}
                     withStrengthIndicator={false}
                     field={field}
+                    fieldState={fieldState}
+                    formState={formState}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="mx-auto w-max">
+          <Button
+            type="submit"
+            className={cn('mx-auto w-max', submitBtnClassName)}
+          >
             Change Password
           </Button>
         </form>

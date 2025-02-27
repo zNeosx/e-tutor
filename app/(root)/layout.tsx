@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { Navbar } from '@/components/NavBar';
+import PageBreadcrumb from '@/components/PageBreadcrumb';
 import TopBar from '@/components/TopBar';
 import React, { ReactNode } from 'react';
 
@@ -10,6 +11,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
     <main className="root-container">
       <TopBar />
       <Navbar session={session} />
+      <PageBreadcrumb />
       <div>{children}</div>
     </main>
   );

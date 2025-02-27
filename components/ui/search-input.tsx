@@ -10,6 +10,7 @@ interface Props {
   inputClassName?: string;
   containerClassName?: string;
   inputPlaceholder?: string;
+  iconClassName?: string;
 }
 export default function SearchInput(props: Props) {
   const id = useId();
@@ -40,14 +41,19 @@ export default function SearchInput(props: Props) {
       <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
         {isLoading ? (
           <LoaderCircle
-            className="animate-spin"
+            className={cn('animate-spin', props.iconClassName)}
             size={24}
             strokeWidth={2}
             role="status"
             aria-label="Loading..."
           />
         ) : (
-          <MagnifyingGlass size={24} strokeWidth={2} aria-hidden="true" />
+          <MagnifyingGlass
+            size={24}
+            strokeWidth={2}
+            aria-hidden="true"
+            className={props.iconClassName}
+          />
         )}
       </div>
     </div>

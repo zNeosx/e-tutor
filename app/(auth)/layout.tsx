@@ -7,7 +7,7 @@ const Authlayout = ({ children }: { children: ReactNode }) => {
     <main className="root-container">
       <div className="border border-b-gray-100">
         <div className="container-md flex items-center justify-between py-5">
-          <Logo />
+          <Logo isLink />
 
           <AuthLAyoutRedirect />
         </div>

@@ -1,10 +1,20 @@
 'use client';
 import AuthForm from '@/components/auth/AuthForm';
-import { signUp } from '@/lib/actions/auth.action';
 import { signUpSchema } from '@/lib/validations';
+import { AuthCredentials } from '@/types';
 import Image from 'next/image';
 
 const SignUpPage = () => {
+  const handleSignUp = async (data: AuthCredentials) => {
+    return await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  };
+
   return (
     <div className="flex size-full flex-1">
       <div className="relative max-lg:hidden lg:basis-2/5">
@@ -30,7 +40,7 @@ const SignUpPage = () => {
               confirmPassword: '',
               terms: false,
             }}
-            onSubmit={signUp}
+            onSubmit={handleSignUp}
           />
         </div>
       </div>

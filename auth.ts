@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import { compare } from 'bcryptjs';
-import NextAuth, { AuthError, User } from 'next-auth';
+import NextAuth, { AuthError, CredentialsSignin, User } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { signInSchema } from './lib/validations';
 
@@ -28,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
-        if (!user) throw new AuthError('Invalid credentials');
+        if (!user) throw new CredentialsSignin('Invalid credentials');
 
         const isPasswordValid = await compare(
           validatedSchema.password,
@@ -36,6 +36,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!isPasswordValid) throw new AuthError('Invalid credentials');
+
+        await prisma.user.update({
+          where: { email: user.email },
+          data: { lastSigned: new Date() },
+        });
 
         return {
           id: user.id,

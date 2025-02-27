@@ -1,4 +1,7 @@
 import { auth } from '@/auth';
+import { AppSidebar } from '@/components/app-sidebar';
+import InstructorNavbar from '@/components/InstructorNavbar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { checkUserRole } from '@/lib/utils';
 import { UserRole } from '@prisma/client';
 import { redirect } from 'next/navigation';
@@ -14,13 +17,19 @@ const InstructorLayout = async ({ children }: { children: ReactNode }) => {
   if (result.redirectPath) redirect(result.redirectPath);
 
   return (
-    <main className="flex min-h-screen">
-      <p>Sidebar</p>
-      <div className="flex w-full flex-col">
-        <p>Navbar</p>
-        {children}
-      </div>
-    </main>
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': '280px',
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar />
+      <SidebarInset className="bg-gray-50">
+        <InstructorNavbar session={session} />
+        <div className="overflow-x-hidden py-6">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

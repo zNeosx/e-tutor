@@ -15,9 +15,19 @@ interface Props {
   folder: string;
   onFileChange: (filePath: string) => void;
   value?: string;
+  containerClassName?: string;
+  imageSize?: number;
 }
 
-const FileUpload = ({ type, accept, folder, onFileChange, value }: Props) => {
+const FileUpload = ({
+  type,
+  accept,
+  folder,
+  onFileChange,
+  value,
+  containerClassName,
+  imageSize = 200,
+}: Props) => {
   const ikUploadRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<{ filePath: string | undefined }>({
     filePath: value ?? undefined,
@@ -75,7 +85,7 @@ const FileUpload = ({ type, accept, folder, onFileChange, value }: Props) => {
       urlEndpoint={env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
       authenticator={authenticator}
     >
-      <div className="h-full w-max border border-gray-100 p-3 md:p-6 xl:p-11">
+      <div className={cn('h-full w-max', containerClassName)}>
         <IKUpload
           className="hidden"
           ref={ikUploadRef}
@@ -92,17 +102,18 @@ const FileUpload = ({ type, accept, folder, onFileChange, value }: Props) => {
           accept={accept}
         />
         <div
-          className={cn(
-            'relative size-[280px] mx-auto',
-            file.filePath ? '' : 'bg-gray-200'
-          )}
+          className={cn('relative mx-auto', file.filePath ? '' : 'bg-gray-200')}
+          style={{
+            width: `${imageSize}px`,
+            height: `${imageSize}px`,
+          }}
         >
           {file ? (
             <IKImage
               alt={file.filePath ?? ''}
               path={file.filePath}
-              width={280}
-              height={280}
+              width={imageSize}
+              height={imageSize}
               className="object-cover"
             />
           ) : null}
@@ -132,7 +143,12 @@ const FileUpload = ({ type, accept, folder, onFileChange, value }: Props) => {
           </div>
         )}
         {type === 'image' ? (
-          <p className="mt-6 max-w-[280px] text-center text-sm text-gray-500">
+          <p
+            className="mt-6 text-center text-sm text-gray-500"
+            style={{
+              maxWidth: `${imageSize}px`,
+            }}
+          >
             Image size should be under 1MB and image ration needs to be 1:1
           </p>
         ) : null}

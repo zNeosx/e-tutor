@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/auth';
+import GlobalModal from '@/components/GlobalModal';
 
 const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800', '900'],
@@ -28,6 +29,7 @@ export default async function RootLayout({
         <body className={`${inter.className} antialiased`}>
           {children}
           <Toaster />
+          <GlobalModal />
         </body>
       </SessionProvider>
     </html>

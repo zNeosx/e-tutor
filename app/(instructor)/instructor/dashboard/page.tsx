@@ -1,7 +1,7 @@
 import React from 'react';
 
 const InstructorDashboardPage = () => {
-  return <div>InstructorDashboardPage</div>;
+  return <section className="container-md">InstructorDashboardPage</section>;
 };
 
 export default InstructorDashboardPage;

@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight } from '@phosphor-icons/react';
 import { UserRole } from '@prisma/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   DefaultValues,
   FieldValues,
@@ -27,16 +27,13 @@ import {
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import PasswordInput from '../ui/password-input';
+import { useModalStore } from '@/store/UseModalStore';
 
 interface Props<T extends FieldValues> {
   type: 'SIGN_UP' | 'SIGN_IN';
   schema: ZodType<T>;
   defaultValues: T;
-  onSubmit: (data: T) => Promise<{
-    success: boolean;
-    error?: string;
-    user: { role: UserRole; isFirstLogin: boolean };
-  }>;
+  onSubmit: (data: T & { role: UserRole }) => Promise<Response>;
 }
 const AuthForm = <T extends FieldValues>({
   type,
@@ -45,7 +42,9 @@ const AuthForm = <T extends FieldValues>({
   onSubmit,
 }: Props<T>) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isSignIn = type === 'SIGN_IN';
+  const openModal = useModalStore((state) => state.openModal);
 
   const form: UseFormReturn<T> = useForm({
     resolver: zodResolver(schema),
@@ -53,31 +52,48 @@ const AuthForm = <T extends FieldValues>({
   });
 
   const handleSubmit: SubmitHandler<T> = async (data: T) => {
-    console.log('data', data);
-    return;
-    const result = await onSubmit(data);
+    const role =
+      searchParams.get('role') === UserRole.INSTRUCTOR.toLocaleLowerCase()
+        ? UserRole.INSTRUCTOR
+        : UserRole.STUDENT;
 
-    if (result.success) {
-      toast({
-        title: 'Success',
-        description: isSignIn
-          ? 'You have successfully signed in'
-          : 'You have successfully signed up',
+    try {
+      const response = await onSubmit({
+        ...data,
+        role,
       });
 
-      if (result.user.isFirstLogin) {
-        if (result.user.role === UserRole.STUDENT)
-          return router.push('/settings');
-        else if (result.user.role === UserRole.INSTRUCTOR)
-          return router.push('/instructor/settings');
-        else return;
-      }
+      const result = await response.json();
 
-      return router.push('/dashboard');
-    } else {
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: isSignIn
+            ? 'You have successfully signed in'
+            : 'You have successfully signed up',
+        });
+
+        if (result.user?.isFirstLogin) {
+          if (result.user?.role === UserRole.STUDENT)
+            return router.push('/settings');
+          else if (result.user?.role === UserRole.INSTRUCTOR)
+            return router.push('/instructor/settings');
+          else return;
+        }
+
+        return router.push('/dashboard');
+      } else {
+        toast({
+          title: `Error ${isSignIn ? 'signing in' : 'signing up'}`,
+          description: result.error ?? 'An error occurred',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error(error);
       toast({
-        title: `Error ${isSignIn ? 'signing in' : 'signing up'}`,
-        description: result.error ?? 'An error occurred',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     }
@@ -151,6 +167,46 @@ const AuthForm = <T extends FieldValues>({
             )
               return null;
 
+            if (field === 'password')
+              return (
+                <div key={field}>
+                  <FormField
+                    control={form.control}
+                    name={field as Path<T>}
+                    render={({ field, fieldState, formState }) => (
+                      <FormItem>
+                        <FormLabel className="capitalize">
+                          {FIELD_NAMES[field.name as keyof typeof FIELD_NAMES]}
+                        </FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            type={
+                              FIELD_TYPES[
+                                field.name as keyof typeof FIELD_TYPES
+                              ]
+                            }
+                            fieldState={fieldState}
+                            formState={formState}
+                            placeholder={'********'}
+                            withStrengthIndicator={false}
+                            field={field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant={'link'}
+                    className="px-0 text-xs"
+                    onClick={() => openModal('reset-password')}
+                  >
+                    Password forgotten ?
+                  </Button>
+                </div>
+              );
+
             return (
               <FormField
                 key={field}
@@ -162,35 +218,20 @@ const AuthForm = <T extends FieldValues>({
                       {FIELD_NAMES[field.name as keyof typeof FIELD_NAMES]}
                     </FormLabel>
                     <FormControl>
-                      {field.name === 'password' ? (
-                        <PasswordInput
-                          type={
-                            FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]
-                          }
-                          fieldState={fieldState}
-                          formState={formState}
-                          placeholder={'********'}
-                          withStrengthIndicator={false}
-                          field={field}
-                        />
-                      ) : (
-                        <Input
-                          type={
-                            FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]
-                          }
-                          placeholder={
-                            FIELD_PLACEHOLDERS[
-                              field.name as keyof typeof FIELD_PLACEHOLDERS
-                            ]
-                          }
-                          data-invalid={
-                            formState.isSubmitted
-                              ? fieldState.invalid
-                              : undefined
-                          }
-                          {...field}
-                        />
-                      )}
+                      <Input
+                        type={
+                          FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]
+                        }
+                        placeholder={
+                          FIELD_PLACEHOLDERS[
+                            field.name as keyof typeof FIELD_PLACEHOLDERS
+                          ]
+                        }
+                        data-invalid={
+                          formState.isSubmitted ? fieldState.invalid : undefined
+                        }
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

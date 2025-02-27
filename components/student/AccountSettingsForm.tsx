@@ -79,6 +79,8 @@ const AccountSettingsForm = ({ user }: { user: User }) => {
                     folder={`avatars`}
                     onFileChange={field.onChange}
                     value={field.value}
+                    imageSize={280}
+                    containerClassName="border border-gray-100 p-3 md:p-6 xl:p-11"
                   />
                 </FormControl>
                 <FormMessage />

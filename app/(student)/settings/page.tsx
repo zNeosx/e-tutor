@@ -1,15 +1,18 @@
-import StudentAccountSettings from '@/components/student/StudentAccountSettings';
-import { getCurrentUser } from '@/lib/actions/user.action';
-import { Separator } from '@/components/ui/separator';
 import PasswordSettings from '@/components/student/PasswordSettings';
+import StudentAccountSettings from '@/components/student/StudentAccountSettings';
+import { Separator } from '@/components/ui/separator';
+import { Suspense } from 'react';
 
-const StudentSettingsPage = async () => {
-  const user = await getCurrentUser();
+const StudentSettingsPage = () => {
   return (
     <>
-      <StudentAccountSettings user={user} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <StudentAccountSettings />
+      </Suspense>
       <Separator />
-      <PasswordSettings user={user} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <PasswordSettings />
+      </Suspense>
     </>
   );
 };

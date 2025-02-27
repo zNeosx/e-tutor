@@ -70,3 +70,13 @@ export const authenticator = async () => {
     throw new Error(`Authenticator request failed: ${error.message}`);
   }
 };
+
+export const formatPageName = (name: string) => {
+  const nameSplitted = String(name).split('-');
+
+  return nameSplitted
+    .map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+};

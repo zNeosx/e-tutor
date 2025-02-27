@@ -1,8 +1,9 @@
-import { User } from '@prisma/client';
-import React from 'react';
+import { getCurrentUser } from '@/lib/actions/user.action';
 import AccountSettingsForm from './AccountSettingsForm';
 
-const StudentAccountSettings = ({ user }: { user: User }) => {
+const StudentAccountSettings = async () => {
+  const user = await getCurrentUser();
+
   return (
     <section className="student-section">
       <h4 className="mb-6">Account settings</h4>

@@ -14,12 +14,13 @@ const Input = React.forwardRef<
       | 'grammar'
       | 'spelling'
       | undefined;
+    inputContainerClassName?: string;
   }
->(({ className, type, ...props }, ref) => {
+>(({ className, type, inputContainerClassName, ...props }, ref) => {
   const isPasswordInput = PASSWORD_FIELDS.includes(props.name as string);
 
   return (
-    <div className="relative">
+    <div className={cn('relative', inputContainerClassName)}>
       <input
         type={type}
         className={cn(

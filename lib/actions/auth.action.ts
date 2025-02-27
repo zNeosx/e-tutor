@@ -6,10 +6,23 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { formatAuthErrorMessage } from '../utils';
 import { AuthCredentials } from '@/types';
+import { UserRole } from '@prisma/client';
+import { createInstructor } from './instructor.action';
+
+// Add a type for the response
+type AuthResponse = {
+  success: boolean;
+  user?: {
+    role: UserRole;
+    isFirstLogin: boolean;
+  };
+  error?: string;
+  status?: number;
+};
 
 export const signInWithCredentials = async (
-  params: Pick<AuthCredentials, 'email' | 'password'>
-) => {
+  params: Pick<AuthCredentials, 'email' | 'password' | 'role'>
+): Promise<AuthResponse> => {
   const { email, password } = params;
 
   try {
@@ -23,22 +36,23 @@ export const signInWithCredentials = async (
       return {
         success: false,
         error: result.error,
+        status: 401, // Unauthorized
       };
     }
 
-    // Vérifier si c'est la première connexion
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { lastSigned: true, role: true }, // Récupérer uniquement lastSigned
+      select: { lastSigned: true, role: true },
     });
 
     if (!user)
       return {
         success: false,
         error: 'Error while signing in',
+        status: 404, // Not Found
       };
 
-    const isFirstLogin = !user.lastSigned; // Si lastSigned est null, c'est la première connexion
+    const isFirstLogin = !user.lastSigned;
 
     await prisma.user.update({
       where: { email },
@@ -59,12 +73,15 @@ export const signInWithCredentials = async (
     return {
       success: false,
       error: formatAuthErrorMessage(authError.message),
+      status: 500, // Internal Server Error
     };
   }
 };
 
-export const signUp = async (params: AuthCredentials) => {
-  const { firstName, lastName, userName, email, password } = params;
+export const signUp = async (
+  params: AuthCredentials
+): Promise<AuthResponse> => {
+  const { firstName, lastName, userName, email, password, role } = params;
 
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -76,23 +93,35 @@ export const signUp = async (params: AuthCredentials) => {
     return {
       success: false,
       error: 'User already exists',
+      status: 409, // Conflict
     };
   }
 
   const hashedPassword = await hash(password, 10);
 
+  const checkedRole = role === UserRole.ADMIN ? UserRole.STUDENT : role;
+
   try {
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         firstName,
         lastName,
         userName,
         email,
         password: hashedPassword,
+        role: checkedRole,
       },
     });
 
-    const result = await signInWithCredentials({ email, password });
+    if (checkedRole === UserRole.INSTRUCTOR) {
+      await createInstructor({ data: { userId: user.id } });
+    }
+
+    const result = await signInWithCredentials({
+      email,
+      password,
+      role: checkedRole,
+    });
 
     return result;
   } catch (error) {
@@ -100,6 +129,7 @@ export const signUp = async (params: AuthCredentials) => {
     return {
       success: false,
       error: error as string,
+      status: 500, // Internal Server Error
     };
   }
 };

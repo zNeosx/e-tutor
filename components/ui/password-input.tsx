@@ -88,8 +88,12 @@ const PasswordInput = ({
           placeholder={placeholder}
           type={isVisible ? 'text' : type}
           aria-describedby={`${id}-description`}
-          aria-invalid={formState.isSubmitted ? isValid : undefined}
-          data-invalid={formState.isSubmitted ? isValid : undefined}
+          aria-invalid={
+            formState && formState.isSubmitted ? isValid : undefined
+          }
+          data-invalid={
+            formState && formState.isSubmitted ? isValid : undefined
+          }
           autoComplete={inputAutoComplete}
           {...field}
         />

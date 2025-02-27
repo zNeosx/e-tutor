@@ -14,25 +14,27 @@ enum UserRole {
 }
 
 model User {
-  id                 String       @id @default(cuid())
-  firstName          String       @map("first_name")
-  lastName           String       @map("last_name")
-  userName           String       @unique @map("user_name")
-  email              String       @unique
-  emailVerified      DateTime?    @map("email_verified")
-  password           String
-  role               UserRole     @default(STUDENT)
-  avatar             String?
-  title              String?
-  isProfileCompleted Boolean?     @default(false) @map("is_profile_completed")
-  createdAt          DateTime     @default(now()) @map("created_at")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
-  lastSigned         DateTime?    @map("last_signed")
-  instructor         Instructor?
-  socialLinks        SocialLinks?
-  coursesTaught      Course[]     @relation("CourseToInstructors")
-  coursesCreated     Course[]     @relation("CoursesToUser")
-  reviews            Review[]     @relation("ReviewsToUser")
+  id                   String       @id @default(cuid())
+  firstName            String       @map("first_name")
+  lastName             String       @map("last_name")
+  userName             String       @unique @map("user_name")
+  email                String       @unique
+  emailVerified        DateTime?    @map("email_verified")
+  password             String
+  role                 UserRole     @default(STUDENT)
+  avatar               String?
+  title                String?
+  isProfileCompleted   Boolean?     @default(false) @map("is_profile_completed")
+  resetPasswordToken   String?      @unique
+  resetPasswordExpires DateTime?
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  lastSigned           DateTime?    @map("last_signed")
+  instructor           Instructor?
+  socialLinks          SocialLinks?
+  coursesTaught        Course[]     @relation("CourseToInstructors")
+  coursesCreated       Course[]     @relation("CoursesToUser")
+  reviews              Review[]     @relation("ReviewsToUser")
 
   @@map("users")
 }
@@ -74,39 +76,56 @@ model Category {
   @@map("categories")
 }
 
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model Course {
-  id                     String          @id @default(cuid())
-  title                  String
-  subtitle               String
-  categoryId             String
-  category               Category        @relation("CoursesToCategory", fields: [categoryId], references: [id])
-  subCategoryId          String?
-  subCategory            Category?       @relation("CoursesToSubCategory", fields: [subCategoryId], references: [id])
-  topic                  String
-  languageId             String
-  language               Language        @relation("CoursesToLanguage", fields: [languageId], references: [id])
-  subLanguageId          String?
-  subLanguage            Language?       @relation("CoursesToSubLanguage", fields: [subLanguageId], references: [id])
-  level                  CourseLevel
-  duration               Int
-  durationUnit           DurationUnit
-  thumbnail              String
-  trailer                String
-  description            String
-  whatYouWillLearn       String[]
-  targetAudience         String[]
-  requirements           String[]
-  instructors            User[]          @relation("CourseToInstructors")
-  sections               CourseSection[]
-  welcomeMessage         String
-  congratulationsMessage String
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-  userId                 String          @unique @map("user_id")
-  user                   User            @relation("CoursesToUser", fields: [userId], references: [id])
-  reviews                Review[]
-  price                  Float?
-  currency               String?         @default("USD")
+  id     String       @id @default(cuid())
+  status CourseStatus @default(DRAFT)
+
+  // Basic Information Fields (Step 1)
+  title                     String? // Required only when publishing
+  subtitle                  String? // Required only when publishing
+  categoryId                String? // Required only when publishing
+  category                  Category?     @relation("CoursesToCategory", fields: [categoryId], references: [id])
+  subCategoryId             String?
+  subCategory               Category?     @relation("CoursesToSubCategory", fields: [subCategoryId], references: [id])
+  topic                     String? // Required only when publishing
+  languageId                String? // Required only when publishing
+  language                  Language?     @relation("CoursesToLanguage", fields: [languageId], references: [id])
+  subLanguageId             String?
+  subLanguage               Language?     @relation("CoursesToSubLanguage", fields: [subLanguageId], references: [id])
+  level                     CourseLevel? // Required only when publishing
+  duration                  Int? // Required only when publishing
+  durationUnit              DurationUnit? // Required only when publishing
+  basicInformationCompleted Boolean       @default(false) @map("basic_information_completed")
+
+  // Advanced Information Fields (Step 2)
+  thumbnail                   String? // Required only when publishing
+  trailer                     String? // Required only when publishing
+  description                 String? // Required only when publishing
+  whatYouWillLearn            String[]
+  targetAudience              String[]
+  requirements                String[]
+  welcomeMessage              String? // Required only when publishing
+  congratulationsMessage      String? // Required only when publishing
+  price                       Float?
+  currency                    String?  @default("USD")
+  advanceInformationCompleted Boolean  @default(false) @map("advance_information_completed")
+
+  // Curriculum Fields (Step 3)
+  sections            CourseSection[]
+  curriculumCompleted Boolean         @default(false) @map("curriculum_completed")
+
+  // Other Fields
+  instructors User[]   @relation("CourseToInstructors")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @map("user_id")
+  user        User     @relation("CoursesToUser", fields: [userId], references: [id])
+  reviews     Review[]
 
   @@map("courses")
 }

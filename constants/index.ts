@@ -102,11 +102,13 @@ export const FIELD_NAMES = {
   firstName: 'firstName',
   lastName: 'lastName',
   userName: 'username',
+  phoneNumber: 'phoneNumber',
   email: 'email',
   password: 'password',
   confirmPassword: 'confirmPassword',
   terms: 'terms',
   title: 'title',
+  biography: 'biography',
 };
 
 export const FIELD_TYPES = {
@@ -127,6 +129,7 @@ export const FIELD_PLACEHOLDERS = {
   password: 'Create password',
   confirmPassword: 'Confirm password',
   title: 'Your tittle, proffesion or small biography',
+  biography: 'Your tittle, proffesion or small biography',
 };
 
 export const PASSWORD_FIELDS = [
@@ -165,3 +168,38 @@ export const STUDENT_HEADER_LINKS = [
     href: '/settings',
   },
 ];
+
+// export const CREATE_NEW_COURSE_STEPS = [
+//   {
+//     index: 0,
+//     id: 'basic-information',
+//     name: 'Basic Information',
+//     icon: Stack,
+//     isCompleted: false,
+//     component: BasicInformationStep,
+//   },
+//   {
+//     index: 1,
+//     id: 'advance-information',
+//     name: 'Advance Information',
+//     icon: Clipboard,
+//     isCompleted: false,
+//     component: AdvanceInformationStep,
+//   },
+//   {
+//     index: 2,
+//     id: 'curriculum',
+//     name: 'Curriculum',
+//     icon: MonitorPlay,
+//     isCompleted: false,
+//     component: CurriculumStep,
+//   },
+//   {
+//     index: 3,
+//     id: 'publish-course',
+//     name: 'Publish Course',
+//     icon: PlayCircle,
+//     isCompleted: false,
+//     component: PublishCourseStep,
+//   },
+// ];
