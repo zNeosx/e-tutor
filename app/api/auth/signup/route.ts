@@ -1,20 +1,18 @@
 import { hash } from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRole } from '@prisma/client';
-import { createInstructor } from '@/lib/actions/instructor.action';
 import { signIn } from '@/auth';
 import { ZodError } from 'zod';
-import { signUpSchema } from '@/lib/validations';
+import { signUpQuerySchema } from '@/lib/validations';
 import { Prisma } from '@prisma/client';
+import { createInstructor, createUser } from '@/lib/db/queries/insert';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate input data
     try {
-      signUpSchema.parse(body);
+      signUpQuerySchema.parse(body);
     } catch (error) {
       if (error instanceof ZodError) {
         return NextResponse.json(
@@ -30,22 +28,19 @@ export async function POST(request: NextRequest) {
     const checkedRole = role === UserRole.ADMIN ? UserRole.STUDENT : role;
 
     try {
-      const user = await prisma.user.create({
-        data: {
-          firstName,
-          lastName,
-          userName,
-          email,
-          password: hashedPassword,
-          role: checkedRole,
-        },
+      const user = await createUser({
+        firstName,
+        lastName,
+        userName,
+        email,
+        password: hashedPassword,
+        role: checkedRole,
       });
 
       if (checkedRole === UserRole.INSTRUCTOR) {
-        await createInstructor({ data: { userId: user.id } });
+        await createInstructor({ userId: user.id });
       }
 
-      // Sign in the user after successful registration
       const signInResult = await signIn('credentials', {
         email,
         password,

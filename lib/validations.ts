@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { userRoleEnum } from './db/schema';
 
 export const signUpSchema = z
   .object({
@@ -54,3 +55,22 @@ export const resetPasswordSchema = z
     message: 'New password must be different from the current password',
     path: ['newPassword'],
   });
+
+export const updateStudentAccountSchema = z.object({
+  id: z.string().uuid(),
+  firstName: z.string().min(2).max(50).optional(),
+  lastName: z.string().min(2).max(50).optional(),
+  userName: z.string().min(2).max(50).optional(),
+  email: z.string().email().optional(),
+  title: z.string().min(2).max(50).optional(),
+  avatar: z.string().optional(),
+});
+
+export const signUpQuerySchema = z.object({
+  firstName: z.string().min(2).max(50),
+  lastName: z.string().min(2).max(50),
+  userName: z.string().min(2).max(50),
+  email: z.string().email(),
+  password: z.string().min(8),
+  role: z.enum(userRoleEnum.enumValues),
+});

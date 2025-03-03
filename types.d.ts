@@ -1,6 +1,6 @@
 import { Icon } from '@phosphor-icons/react';
 import { UserRole } from '@prisma/client';
-import { ComponentType } from 'react';
+import { JSX } from 'react';
 
 interface Category {
   id: number;
@@ -34,5 +34,5 @@ export type Step = {
   icon: Icon;
   index: number;
   isCompleted?: boolean;
-  component: ComponentType;
+  component: () => JSX.Element;
 };

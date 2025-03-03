@@ -1,5 +1,3 @@
-'use client';
-
 import CreateNewCourseContainer from '@/components/course/CreateNewCourseContainer';
 
 const CreateNewCoursePage = () => {

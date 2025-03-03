@@ -19,7 +19,6 @@ import { FIELD_NAMES, FIELD_PLACEHOLDERS, FIELD_TYPES } from '@/constants';
 import { studentAccountSchema } from '@/lib/validations';
 import { User } from '@prisma/client';
 import FileUpload from '../FileUpload';
-import { updateUser } from '@/lib/actions/user.action';
 import { toast } from '@/hooks/use-toast';
 
 const AccountSettingsForm = ({ user }: { user: User }) => {
@@ -37,21 +36,36 @@ const AccountSettingsForm = ({ user }: { user: User }) => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof studentAccountSchema>) {
-    console.log(values);
-    const result = await updateUser({
-      id: user.id,
-      data: values,
-    });
-
-    if (result.success) {
-      toast({
-        title: 'Success',
-        description: 'Account updated successfully',
+    try {
+      const response = await fetch('/api/user/account/settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: user.id,
+          ...values,
+        }),
       });
-    } else {
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Account updated successfully',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Something went wrong',
+          variant: 'destructive',
+        });
+      }
+    } catch {
       toast({
-        title: `Error while updating your account`,
-        description: result.error ?? 'An error occurred',
+        title: 'Error',
+        description: 'Failed to update account',
         variant: 'destructive',
       });
     }

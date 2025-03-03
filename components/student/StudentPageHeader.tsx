@@ -3,15 +3,14 @@ import { STUDENT_HEADER_LINKS } from '@/constants';
 import { env } from '@/env';
 import { cn, getInitials } from '@/lib/utils';
 import { ArrowRight } from '@phosphor-icons/react';
-import { User } from '@prisma/client';
 import { IKImage } from 'imagekitio-next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { buttonVariants } from '../ui/button';
-
+import { SelectUser } from '@/lib/db/schema';
 export type StudentPageHeaderProps = {
-  user: User;
+  user: SelectUser;
 };
 
 export const StudentPageHeader = (props: StudentPageHeaderProps) => {

@@ -1,15 +1,16 @@
 import { Step } from '@/types';
 import { create } from 'zustand';
+
+import BasicInformationStep from '@/components/course/create-course/BasicInformationStep';
+import AdvanceInformationStep from '@/components/course/create-course/AdvanceInformationStep';
+import CurriculumStep from '@/components/course/create-course/CurriculumStep';
+import PublishCourseStep from '@/components/course/create-course/PublishCourseStep';
 import {
   Stack,
   Clipboard,
   MonitorPlay,
   PlayCircle,
 } from '@phosphor-icons/react';
-import BasicInformationStep from '@/components/course/create-course/BasicInformationStep';
-import AdvanceInformationStep from '@/components/course/create-course/AdvanceInformationStep';
-import CurriculumStep from '@/components/course/create-course/CurriculumStep';
-import PublishCourseStep from '@/components/course/create-course/PublishCourseStep';
 
 const CREATE_NEW_COURSE_STEPS: Step[] = [
   {

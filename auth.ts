@@ -1,9 +1,11 @@
-import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import { compare } from 'bcryptjs';
 import NextAuth, { AuthError, CredentialsSignin, User } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { signInSchema } from './lib/validations';
+import { db } from './lib/db';
+import { eq } from 'drizzle-orm';
+import { usersTable } from './lib/db/schema';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
@@ -22,11 +24,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const validatedSchema = signInSchema.parse(credentials);
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: validatedSchema.email,
-          },
-        });
+        const [user] = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.email, validatedSchema.email));
 
         if (!user) throw new CredentialsSignin('Invalid credentials');
 
@@ -37,10 +38,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isPasswordValid) throw new AuthError('Invalid credentials');
 
-        await prisma.user.update({
-          where: { email: user.email },
-          data: { lastSigned: new Date() },
-        });
+        await db
+          .update(usersTable)
+          .set({ lastSigned: new Date() })
+          .where(eq(usersTable.email, user.email));
 
         return {
           id: user.id,

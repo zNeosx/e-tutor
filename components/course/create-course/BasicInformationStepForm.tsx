@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -9,6 +10,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import InputWithCharacterLimit from '@/components/ui/input-with-character-limit';
+import InputWithSelect from '@/components/ui/input-with-select';
 import {
   Select,
   SelectContent,
@@ -16,14 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
 import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Course, CourseLevel, DurationUnit } from '@prisma/client';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import StepFormBtnContainer from './StepFormBtnContainer';
-import InputWithCharacterLimit from '@/components/ui/input-with-character-limit';
-import { CourseLevel, DurationUnit } from '@prisma/client';
-import InputWithSelect from '@/components/ui/input-with-select';
 
 export const basicInformationSchema = z.object({
   title: z.string().min(1).max(80),
@@ -38,34 +40,118 @@ export const basicInformationSchema = z.object({
   durationUnit: z.nativeEnum(DurationUnit),
 });
 
-const BasicInformationStepForm = () => {
-  const { currentStep, setStepCompleted, setNextStep } =
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface Language {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface BasicInformationStepFormProps {
+  course?: Course;
+}
+
+const BasicInformationStepForm = ({
+  course,
+}: BasicInformationStepFormProps) => {
+  const { currentStep, setStepCompleted, setNextStep, resetStore } =
     useCreateCourseStepStore();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const form = useForm<z.infer<typeof basicInformationSchema>>({
     resolver: zodResolver(basicInformationSchema),
     defaultValues: {
-      title: '',
-      subtitle: '',
-      category: undefined,
-      subCategory: undefined,
-      topic: '',
-      language: '',
-      subLanguage: '',
-      level: CourseLevel.BEGINNER,
-      duration: 1,
-      durationUnit: DurationUnit.DAYS,
+      title: course?.title ?? '',
+      subtitle: course?.subtitle ?? '',
+      category: course?.categoryId ?? '',
+      subCategory: course?.subCategoryId ?? '',
+      topic: course?.topic ?? '',
+      language: course?.languageId ?? '',
+      subLanguage: course?.subLanguageId ?? '',
+      level: course?.level ?? CourseLevel.BEGINNER,
+      duration: course?.duration ?? 1,
+      durationUnit: course?.durationUnit ?? DurationUnit.DAYS,
     },
   });
 
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const response = await fetch('/api/course-metadata');
+        const data = await response.json();
+        setCategories(data.categories);
+        setLanguages(data.languages);
+      } catch (error) {
+        console.error('Failed to fetch course metadata:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load form data',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMetadata();
+  }, []);
+
   async function onSubmit(values: z.infer<typeof basicInformationSchema>) {
-    console.log('values', values);
-    setStepCompleted(currentStep.id, true);
-    setNextStep();
+    try {
+      // console.log('values', values);
+      // return;
+      const method = course ? 'PATCH' : 'POST';
+      const url = course ? `/api/courses/${course.id}` : '/api/courses';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      // Update step completion status
+      setStepCompleted(currentStep.id, true);
+
+      // Store course ID in localStorage for future steps
+      // localStorage.setItem('currentCourseId', data.id);
+
+      // Show success message
+      toast({
+        title: 'Success',
+        description: `Course ${course ? 'updated' : 'created'} successfully`,
+      });
+
+      // Move to next step
+      setNextStep();
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save course information',
+        variant: 'destructive',
+      });
+    }
   }
 
-  console.log('duration', form.watch('duration'));
-  console.log('durationUnit', form.watch('durationUnit'));
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -124,14 +210,16 @@ const BasicInformationStepForm = () => {
                 <FormLabel>Course Category</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={isLoading}>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="development">Development</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="design">Design</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -189,14 +277,16 @@ const BasicInformationStepForm = () => {
                 <FormLabel>Course Language</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={isLoading}>
                       <SelectValue placeholder="Select a language" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
+                    {languages.map((language) => (
+                      <SelectItem key={language.id} value={language.id}>
+                        {language.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -211,14 +301,16 @@ const BasicInformationStepForm = () => {
                 <FormLabel>Sub-language (Optional)</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={isLoading}>
                       <SelectValue placeholder="Select a sub-language" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
+                    {languages.map((language) => (
+                      <SelectItem key={language.id} value={language.id}>
+                        {language.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -292,7 +384,14 @@ const BasicInformationStepForm = () => {
             )}
           />
         </div>
-        <StepFormBtnContainer />
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => resetStore()}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={currentStep.isCompleted}>
+            Save & Next
+          </Button>
+        </div>
       </form>
     </Form>
   );

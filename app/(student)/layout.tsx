@@ -1,9 +1,11 @@
 import { auth } from '@/auth';
 import { Navbar } from '@/components/NavBar';
 import { StudentPageHeader } from '@/components/student/StudentPageHeader';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import { usersTable } from '@/lib/db/schema';
 import { checkUserRole } from '@/lib/utils';
 import { UserRole } from '@prisma/client';
+import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
@@ -16,11 +18,10 @@ const StudentLayout = async ({ children }: { children: ReactNode }) => {
 
   if (result.redirectPath) redirect(result.redirectPath);
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: session.user.id,
-    },
-  });
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, session.user.id));
 
   if (!user) redirect('/auth/sign-in');
 

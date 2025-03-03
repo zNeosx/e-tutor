@@ -6,7 +6,23 @@ export default auth((req) => {
   //   return Response.redirect(newUrl);
   // }
 
-  if (req.auth && req.nextUrl.pathname.startsWith('/auth')) {
+  const pathname = req.nextUrl.pathname;
+  const isAuthenticated = req.auth;
+
+  const authApiRoutes = [
+    '/api/auth/signup',
+    '/api/auth/signin',
+    '/api/auth/reset-password',
+  ];
+  const includeAuthApiRoutes = authApiRoutes.includes(pathname);
+
+  if (!isAuthenticated && pathname.startsWith('/api')) {
+    if (!includeAuthApiRoutes) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  if (isAuthenticated && req.nextUrl.pathname.startsWith('/auth')) {
     const newUrl = new URL('/', req.nextUrl.origin);
     return Response.redirect(newUrl);
   }

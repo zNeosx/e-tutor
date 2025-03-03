@@ -8,6 +8,9 @@ import { formatAuthErrorMessage } from '../utils';
 import { AuthCredentials } from '@/types';
 import { UserRole } from '@prisma/client';
 import { createInstructor } from './instructor.action';
+import { users } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import { db } from '../db';
 
 // Add a type for the response
 type AuthResponse = {
@@ -40,10 +43,11 @@ export const signInWithCredentials = async (
       };
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { lastSigned: true, role: true },
-    });
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
     if (!user)
       return {
@@ -54,10 +58,10 @@ export const signInWithCredentials = async (
 
     const isFirstLogin = !user.lastSigned;
 
-    await prisma.user.update({
-      where: { email },
-      data: { lastSigned: new Date() },
-    });
+    await db
+      .update(users)
+      .set({ lastSigned: new Date() })
+      .where(eq(users.email, email));
 
     return {
       success: true,
@@ -83,11 +87,11 @@ export const signUp = async (
 ): Promise<AuthResponse> => {
   const { firstName, lastName, userName, email, password, role } = params;
 
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+  const [existingUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
 
   if (existingUser) {
     return {
@@ -102,15 +106,13 @@ export const signUp = async (
   const checkedRole = role === UserRole.ADMIN ? UserRole.STUDENT : role;
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        firstName,
-        lastName,
-        userName,
-        email,
-        password: hashedPassword,
-        role: checkedRole,
-      },
+    const user = await db.insert(users).values({
+      firstName,
+      lastName,
+      userName,
+      email,
+      password: hashedPassword,
+      role: checkedRole,
     });
 
     if (checkedRole === UserRole.INSTRUCTOR) {

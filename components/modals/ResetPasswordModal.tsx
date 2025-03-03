@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { requestPasswordReset } from '@/lib/actions/user.action';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -44,24 +43,24 @@ const ResetPasswordModal = ({ isOpen, closeModal }: Props) => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    const result = await requestPasswordReset(values.email);
-    console.log('result', result);
-    if (result.error) {
-      toast({
-        title: 'Error',
-        description: result.error,
-        variant: 'destructive',
-      });
-      return;
-    }
+    // const result = await requestPasswordReset(values.email);
+    // console.log('result', result);
+    // if (result.error) {
+    //   toast({
+    //     title: 'Error',
+    //     description: result.error,
+    //     variant: 'destructive',
+    //   });
+    //   return;
+    // }
 
-    toast({
-      title: 'Success',
-      description:
-        'Un email a été envoyé avec les instructions pour réinitialiser votre mot de passe.',
-    });
+    // toast({
+    //   title: 'Success',
+    //   description:
+    //     'Un email a été envoyé avec les instructions pour réinitialiser votre mot de passe.',
+    // });
 
-    closeModal();
+    // closeModal();
     return;
   }
   return (

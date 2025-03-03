@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/form';
 
 import { toast } from '@/hooks/use-toast';
-import { updatePassword } from '@/lib/actions/user.action';
 import { resetPasswordSchema } from '@/lib/validations';
 import { User } from '@prisma/client';
 import PasswordInput from '../ui/password-input';
@@ -40,31 +39,32 @@ const ResetPasswordForm = ({
   });
 
   async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
-    const result = await updatePassword({
-      userId: user.id,
-      currentPassword: values.currentPassword,
-      newPassword: values.newPassword,
-    });
+    console.log('values', values);
+    // const result = await updatePassword({
+    //   userId: user.id,
+    //   currentPassword: values.currentPassword,
+    //   newPassword: values.newPassword,
+    // });
 
-    if (result.success) {
-      toast({
-        title: 'Success',
-        description: 'Password updated successfully',
-      });
-    } else {
-      if (result.inputError) {
-        form.setError(result.inputError, {
-          type: 'custom',
-          message: result.error,
-        });
-      }
+    // if (result.success) {
+    //   toast({
+    //     title: 'Success',
+    //     description: 'Password updated successfully',
+    //   });
+    // } else {
+    //   if (result.inputError) {
+    //     form.setError(result.inputError, {
+    //       type: 'custom',
+    //       message: result.error,
+    //     });
+    //   }
 
-      toast({
-        title: `Error while updating your password`,
-        description: result.error ?? 'An error occurred',
-        variant: 'destructive',
-      });
-    }
+    //   toast({
+    //     title: `Error while updating your password`,
+    //     description: result.error ?? 'An error occurred',
+    //     variant: 'destructive',
+    //   });
+    // }
   }
 
   return (
