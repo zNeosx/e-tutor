@@ -129,6 +129,9 @@ body {
   .body-sm-400 {
     @apply text-[12px] leading-[16px] font-normal;
   }
+  .body-sm-500 {
+    @apply text-[12px] leading-[16px] font-medium;
+  }
   .body-m-400 {
     @apply !text-xs !leading-[22px] !font-normal;
   }

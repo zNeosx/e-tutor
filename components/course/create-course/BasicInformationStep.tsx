@@ -1,26 +1,7 @@
-import { useParams } from 'next/navigation';
+import { Course } from '@prisma/client';
 import BasicInformationStepForm from './BasicInformationStepForm';
-import { useQuery } from '@tanstack/react-query';
-import Loader from '@/components/common/Loader';
-const BasicInformationStep = () => {
-  const { id } = useParams();
 
-  const query = useQuery({
-    queryKey: ['course', id],
-    queryFn: () => fetch(`/api/courses/${id}`).then((res) => res.json()),
-    enabled: !!id,
-  });
-
-  if (query.isLoading) {
-    return <Loader />;
-  }
-
-  if (query.isError) {
-    return <div>Error: {query.error.message}</div>;
-  }
-
-  const course = query.data;
-
+const BasicInformationStep = ({ course }: { course: Course }) => {
   return (
     <div>
       <div className="cc-header border-b border-gray-50">

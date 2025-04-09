@@ -1,4 +1,4 @@
-import { Course, CourseCreate } from '../entities/course';
+import { Course, CourseCreate, CourseUpdate } from '../entities/course';
 
 export interface ICourseRepository {
   create({
@@ -8,7 +8,7 @@ export interface ICourseRepository {
     course: CourseCreate;
     userId: string;
   }): Promise<Course>;
-  // update(course: CourseUpdate): Promise<Course>;
+  update(course: CourseUpdate): Promise<Course>;
   // delete(course: Course): Promise<void>;
   findById(id: string): Promise<Course | null>;
   findBySlug(slug: string): Promise<Course | null>;

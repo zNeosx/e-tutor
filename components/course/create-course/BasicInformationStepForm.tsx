@@ -21,46 +21,64 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { useCourseMetadata } from '@/hooks/use-course-metadata';
-import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Course, CourseLevel, DurationUnit } from '@prisma/client';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { courseCreateSchema } from '@/src/domain/entities/course';
+import { basicInformationSchema } from '@/src/domain/entities/course';
+import { useCourseProgressStore } from '@/src/store/course-progress.store';
+import React from 'react';
 
 interface BasicInformationStepFormProps {
   course?: Course;
 }
 
-const basicInformationSchema = courseCreateSchema.omit({ userId: true });
 const BasicInformationStepForm = ({
   course,
 }: BasicInformationStepFormProps) => {
-  const { currentStep, setStepCompleted, setNextStep, resetStore } =
-    useCreateCourseStepStore();
+  // const { currentStep, setStepCompleted, setNextStep, resetStore } =
+  //   useCreateCourseStepStore();
 
   const { categories, languages, isLoading, error } = useCourseMetadata();
+  const { updateBasicInformation } = useCourseProgressStore();
 
-  const form = useForm<z.infer<typeof basicInformationSchema>>({
-    resolver: zodResolver(basicInformationSchema),
-    defaultValues: {
+  const defaultValues = React.useMemo(
+    () => ({
       title: course?.title ?? '',
       subtitle: course?.subtitle ?? '',
-      categoryId: course?.categoryId,
-      subCategoryId: course?.subCategoryId,
+      categoryId: course?.categoryId ?? '',
+      subCategoryId: course?.subCategoryId ?? '',
       topic: course?.topic ?? '',
-      languageId: course?.languageId,
-      subLanguageId: course?.subLanguageId,
+      languageId: course?.languageId ?? '',
+      subLanguageId: course?.subLanguageId ?? '',
       level: course?.level ?? CourseLevel.BEGINNER,
       duration: course?.duration ?? 1,
       durationUnit: course?.durationUnit ?? DurationUnit.DAYS,
-    },
+    }),
+    [course]
+  );
+
+  const form = useForm<z.infer<typeof basicInformationSchema>>({
+    resolver: zodResolver(basicInformationSchema),
+    defaultValues,
   });
+
+  React.useEffect(() => {
+    updateBasicInformation(defaultValues);
+  }, [updateBasicInformation, defaultValues]);
+
+  React.useEffect(() => {
+    const subscription = form.watch((data) => {
+      updateBasicInformation(data);
+    });
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.watch]);
 
   async function onSubmit(values: z.infer<typeof basicInformationSchema>) {
     try {
-      const method = course ? 'PATCH' : 'POST';
-      const url = course ? `/api/courses/${course.id}` : '/api/courses';
+      const method = 'PATCH';
+      const url = `/api/courses/${course?.slug}`;
 
       const response = await fetch(url, {
         method,
@@ -76,12 +94,12 @@ const BasicInformationStepForm = ({
         throw new Error(data.error || 'Something went wrong');
       }
 
-      setStepCompleted(currentStep.id, true);
+      // setStepCompleted(currentStep.id, true);
       toast({
         title: 'Success',
-        description: `Course ${course ? 'updated' : 'created'} successfully`,
+        description: `Course updatedsuccessfully`,
       });
-      setNextStep();
+      // setNextStep();
     } catch (error) {
       console.error(error);
       toast({
@@ -136,9 +154,9 @@ const BasicInformationStepForm = ({
                 <FormLabel>Subtitle</FormLabel>
                 <FormControl>
                   <InputWithCharacterLimit
-                    placeholder="Your course title"
+                    placeholder="Your course subtitle"
                     maxLength={120}
-                    value={value}
+                    value={value ?? ''}
                     onChange={onChange}
                     {...rest}
                   />
@@ -156,7 +174,10 @@ const BasicInformationStepForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ''}
+                >
                   <FormControl>
                     <SelectTrigger disabled={isLoading}>
                       <SelectValue placeholder="Select a category" />
@@ -256,18 +277,24 @@ const BasicInformationStepForm = ({
         <FormField
           control={form.control}
           name="topic"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Course Topic</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="What is primarily taught in your course?"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const { value, onChange, ...rest } = field;
+
+            return (
+              <FormItem>
+                <FormLabel>Course Topic</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="What is primarily taught in your course?"
+                    value={value ?? ''}
+                    onChange={onChange}
+                    {...rest}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
@@ -277,7 +304,10 @@ const BasicInformationStepForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Language</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ''}
+                >
                   <FormControl>
                     <SelectTrigger disabled={isLoading}>
                       <SelectValue placeholder="Select a language" />
@@ -364,7 +394,10 @@ const BasicInformationStepForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Level</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ''}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a level" />
@@ -407,12 +440,11 @@ const BasicInformationStepForm = ({
           />
         </div>
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => resetStore()}>
-            Cancel
-          </Button>
+          {/* <Button variant="outline" onClick={() => resetStore()}> */}
+          <Button variant="outline">Cancel</Button>
           <Button
             type="submit"
-            disabled={currentStep.isCompleted}
+            // disabled={currentStep.isCompleted}
             isLoading={form.formState.isSubmitting}
           >
             Save & Next

@@ -1,14 +1,16 @@
 'use client';
-import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import React from 'react';
+import { Course } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
-import Loader from '../common/Loader';
-import { Course } from '@/src/domain/entities/course';
 import Link from 'next/link';
+import Loader from '../common/Loader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import BasicInformationStep from './create-course/BasicInformationStep';
+import AdvanceInformationStep from './create-course/AdvanceInformationStep';
+import { Clipboard, Stack } from '@phosphor-icons/react';
+import { useCourseProgressStore } from '@/src/store/course-progress.store';
 
 const CreateNewCourseTab = ({ slug }: { slug: string }) => {
-  const { steps, currentStep, setCurrentStep } = useCreateCourseStepStore();
+  const progressStore = useCourseProgressStore();
 
   const query = useQuery({
     queryKey: ['course', slug],
@@ -33,60 +35,94 @@ const CreateNewCourseTab = ({ slug }: { slug: string }) => {
 
   const course: Course = query.data;
 
-  console.log('course', course);
-  console.log('query', query);
+  // return (
+  //   <Tabs
+  //     defaultValue={currentStep.id}
+  //     value={currentStep.id}
+  //     onValueChange={(value) => {
+  //       const nextStep = steps.find((step) => step.id === value);
+  //       // Allow moving to next step if current step is completed or moving to previous/current step
+  //       if (
+  //         nextStep &&
+  //         (nextStep.index <= currentStep.index ||
+  //           currentStep.isCompleted ||
+  //           nextStep.index === currentStep.index + 1)
+  //       ) {
+  //         setCurrentStep(nextStep);
+  //       }
+  //     }}
+  //     className="w-full"
+  //   >
+  //     <TabsList className="h-auto w-full rounded-none bg-transparent p-0">
+  //       {steps.map((step) => {
+  //         const isBasicInformationStep = step.id === 'basic-information';
+
+  //         const isBasicInformationCompleted = course?.basicInformationCompleted;
+
+  //         return (
+  //           <TabsTrigger
+  //             key={step.id}
+  //             value={step.id}
+  //             // disabled={
+  //             //   step.index > currentStep.index + 1 ||
+  //             //   (step.index === currentStep.index + 1 &&
+  //             //     !currentStep.isCompleted)
+  //             // }
+  //             disabled={!isBasicInformationStep && !isBasicInformationCompleted}
+  //             className="relative flex flex-1 justify-start gap-2 rounded-none p-5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
+  //           >
+  //             <step.icon className="size-6" />
+  //             {step.name}
+  //           </TabsTrigger>
+  //         );
+  //       })}
+  //     </TabsList>
+
+  //     {steps.map((step) => {
+  //       const StepComponent = step.component;
+  //       return (
+  //         <TabsContent key={step.id} value={step.id} className="mt-0">
+  //           <StepComponent />
+  //         </TabsContent>
+  //       );
+  //     })}
+  //   </Tabs>
+  // );
+
+  const tabsTriggerClassName =
+    'relative flex flex-1 justify-start gap-2 rounded-none p-5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary';
+
+  const tabsContentClassName = 'mt-0';
+
+  const tabsTriggerIconClassName = 'size-6 text-gray-600';
 
   return (
-    <Tabs
-      defaultValue={currentStep.id}
-      value={currentStep.id}
-      onValueChange={(value) => {
-        const nextStep = steps.find((step) => step.id === value);
-        // Allow moving to next step if current step is completed or moving to previous/current step
-        if (
-          nextStep &&
-          (nextStep.index <= currentStep.index ||
-            currentStep.isCompleted ||
-            nextStep.index === currentStep.index + 1)
-        ) {
-          setCurrentStep(nextStep);
-        }
-      }}
-      className="w-full"
-    >
+    <Tabs className="w-full" defaultValue="basic">
       <TabsList className="h-auto w-full rounded-none bg-transparent p-0">
-        {steps.map((step) => {
-          const isBasicInformationStep = step.id === 'basic-information';
-
-          const isBasicInformationCompleted = course?.basicInformationCompleted;
-
-          return (
-            <TabsTrigger
-              key={step.id}
-              value={step.id}
-              // disabled={
-              //   step.index > currentStep.index + 1 ||
-              //   (step.index === currentStep.index + 1 &&
-              //     !currentStep.isCompleted)
-              // }
-              disabled={!isBasicInformationStep && !isBasicInformationCompleted}
-              className="relative flex flex-1 justify-start gap-2 rounded-none p-5 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
-            >
-              <step.icon className="size-6" />
-              {step.name}
-            </TabsTrigger>
-          );
-        })}
+        <TabsTrigger value="basic" className={tabsTriggerClassName} asChild>
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2">
+              <Stack className={tabsTriggerIconClassName} /> Basic Information
+            </span>
+            <span className="body-sm-500 text-success max-sm:hidden">
+              {progressStore.basicInformation.completedFields}/
+              {progressStore.basicInformation.totalFields}
+            </span>
+          </div>
+        </TabsTrigger>
+        <TabsTrigger value="advance" className={tabsTriggerClassName}>
+          <div className="flex items-center gap-2">
+            <Clipboard className={tabsTriggerIconClassName} /> Advance
+            Information
+          </div>
+        </TabsTrigger>
       </TabsList>
-
-      {steps.map((step) => {
-        const StepComponent = step.component;
-        return (
-          <TabsContent key={step.id} value={step.id} className="mt-0">
-            <StepComponent />
-          </TabsContent>
-        );
-      })}
+      <TabsContent value="basic" className={tabsContentClassName}>
+        <BasicInformationStep course={course} />
+      </TabsContent>
+      <TabsContent value="advance" className={tabsContentClassName}>
+        <AdvanceInformationStep course={course} />
+      </TabsContent>
     </Tabs>
   );
 };

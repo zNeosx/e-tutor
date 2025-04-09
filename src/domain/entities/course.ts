@@ -5,10 +5,10 @@ export const courseSchema = z.object({
   id: z.string().uuid(),
   status: z.nativeEnum(CourseStatus),
   title: z.string().min(1),
-  subtitle: z.string().min(1).nullable().optional(),
+  subtitle: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
   subCategoryId: z.string().nullable().optional(),
-  topic: z.string().min(1).nullable().optional(),
+  topic: z.string().nullable().optional(),
   languageId: z.string().nullable().optional(),
   subLanguageId: z.string().nullable().optional(),
   level: z.nativeEnum(CourseLevel).nullable().optional(),
@@ -27,6 +27,34 @@ export const courseCreateSchema = courseSchema.pick({
 
 export type CourseCreate = z.infer<typeof courseCreateSchema>;
 
+export const basicInformationSchema = courseSchema.pick({
+  title: true,
+  subtitle: true,
+  categoryId: true,
+  subCategoryId: true,
+  topic: true,
+  languageId: true,
+  subLanguageId: true,
+  level: true,
+  duration: true,
+  durationUnit: true,
+});
+export const basicInformationRequiredSchema = courseSchema.pick({
+  title: true,
+  subtitle: true,
+  categoryId: true,
+  topic: true,
+  languageId: true,
+  level: true,
+  duration: true,
+  durationUnit: true,
+});
+
+export type BasicInformation = z.infer<typeof basicInformationSchema>;
+export type BasicInformationRequired = z.infer<
+  typeof basicInformationRequiredSchema
+>;
+
 export const courseUpdateSchema = courseSchema
   .pick({
     title: true,
@@ -39,7 +67,7 @@ export const courseUpdateSchema = courseSchema
     level: true,
     duration: true,
     durationUnit: true,
-    basicInformationCompleted: true,
+    slug: true,
   })
   .partial();
 export type CourseUpdate = z.infer<typeof courseUpdateSchema>;

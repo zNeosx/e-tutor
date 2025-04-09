@@ -1,11 +1,19 @@
-import { Course, CourseCreate } from '@/src/domain/entities/course';
+import {
+  Course,
+  CourseCreate,
+  CourseUpdate,
+} from '@/src/domain/entities/course';
 import { ICourseRepository } from '../../domain/repositories/course-repository.interface';
 import { prisma } from '@/lib/prisma';
 import {
   DatabaseOperationError,
   NotFoundError,
 } from '@/src/domain/entities/errors/common';
-import { generateSlug } from '@/lib/utils';
+import {
+  generateSlug,
+  filterEmptyValues,
+  validateBasicInformation,
+} from '@/lib/utils';
 
 export class CourseRepository implements ICourseRepository {
   async create({
@@ -42,18 +50,36 @@ export class CourseRepository implements ICourseRepository {
     }
   }
 
-  // async update(course: CourseUpdate): Promise<Course> {
-  //   try {
-  //     const updatedCourse = await prisma.course.update({
-  //       where: { id: course.id },
-  //       data: course,
-  //     });
-  //     return updatedCourse;
-  //   } catch (error) {
-  //     console.error('CourseRepository.update', error);
-  //     throw error;
-  //   }
-  // }
+  async update(course: CourseUpdate): Promise<Course> {
+    try {
+      const validation = validateBasicInformation(course);
+      // if (!validation.isValid) {
+      //   throw new DatabaseOperationError(
+      //     `Basic information is incomplete. Completed: ${validation.completedFields}/${validation.totalFields} fields`
+      //   );
+      // }
+
+      const filteredData = filterEmptyValues(course);
+
+      const updatedCourse = await prisma.course.update({
+        where: { slug: course.slug },
+        data: {
+          ...filteredData,
+          basicInformationCompleted: validation.isValid,
+        },
+      });
+
+      if (!updatedCourse) {
+        throw new DatabaseOperationError('Failed to update course');
+      }
+
+      return updatedCourse;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('CourseRepository.update', error.stack);
+      throw error;
+    }
+  }
 
   // async delete(course: Course): Promise<void> {
   //   try {
