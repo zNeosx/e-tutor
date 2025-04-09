@@ -91,12 +91,12 @@ model Course {
   basicInformationCompleted Boolean?      @default(false) @map("basic_information_completed")
 
   // Advanced Information Fields (Step 2)
-  // thumbnail                   String? @D
-  // trailer                     String? 
-  // description                 String? 
-  // whatYouWillLearn            String[]
-  // targetAudience              String[]
-  // requirements                String[]
+  thumbnail        String?
+  trailer          String?
+  description      String?
+  whatYouWillLearn String[]
+  targetAudience   String[]
+  requirements     String[]
   // welcomeMessage              String? 
   // congratulationsMessage      String? 
   // price                       Float?
