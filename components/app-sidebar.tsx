@@ -31,7 +31,7 @@ import { signOut } from 'next-auth/react';
 const items = [
   {
     title: 'Dashboard',
-    url: 'dashboard',
+    url: '/instructor/dashboard',
     icon: ChartBar,
     isAvailable: false,
   },
@@ -43,7 +43,7 @@ const items = [
   // },
   {
     title: 'My Courses',
-    url: 'courses',
+    url: '/instructor/courses',
     icon: Stack,
     isAvailable: true,
   },
@@ -62,7 +62,7 @@ const items = [
   },
   {
     title: 'Settings',
-    url: 'settings',
+    url: '/instructor/settings',
     icon: Gear,
     isAvailable: true,
   },
