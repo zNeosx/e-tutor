@@ -1,60 +1,55 @@
-// import { db } from './index';
-// import { categories, languages } from './schema';
-// import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
 
-// async function main() {
-//   const categoriesData = [
-//     { name: 'Development', icon: '💻', color: '#007bff' },
-//     { name: 'Business', icon: '💼', color: '#28a745' },
-//     { name: 'Design', icon: '🎨', color: '#6f42c1' },
-//     { name: 'Marketing', icon: '📈', color: '#fd7e14' },
-//     { name: 'Music', icon: '🎵', color: '#e83e8c' },
-//     { name: 'Health & Fitness', icon: '💪', color: '#20c997' },
-//     { name: 'Photography', icon: '📸', color: '#6c757d' },
-//     { name: 'Personal Development', icon: '🎯', color: '#17a2b8' },
-//   ];
+const prisma = new PrismaClient();
 
-//   const languagesData = [
-//     { name: 'English', code: 'en', flag: '🇬🇧' },
-//     { name: 'French', code: 'fr', flag: '🇫🇷' },
-//     { name: 'Spanish', code: 'es', flag: '🇪🇸' },
-//     { name: 'German', code: 'de', flag: '🇩🇪' },
-//     { name: 'Arabic', code: 'ar', flag: '🇸🇦' },
-//   ];
+async function main() {
+  // Create Categories
+  const categories = [
+    { name: 'Development', icon: '💻', color: '#007bff' },
+    { name: 'Business', icon: '💼', color: '#28a745' },
+    { name: 'Design', icon: '🎨', color: '#6f42c1' },
+    { name: 'Marketing', icon: '📈', color: '#fd7e14' },
+    { name: 'Music', icon: '🎵', color: '#e83e8c' },
+    { name: 'Health & Fitness', icon: '💪', color: '#20c997' },
+    { name: 'Photography', icon: '📸', color: '#6c757d' },
+    { name: 'Personal Development', icon: '🎯', color: '#17a2b8' }
+  ];
 
-//   console.log('Start seeding...');
+  // Create Languages
+  const languages = [
+    { name: 'English', code: 'en', flag: '🇬🇧' },
+    { name: 'French', code: 'fr', flag: '🇫🇷' },
+    { name: 'Spanish', code: 'es', flag: '🇪🇸' },
+    { name: 'German', code: 'de', flag: '🇩🇪' },
+    { name: 'Arabic', code: 'ar', flag: '🇸🇦' }
+  ];
 
-//   try {
-//     // Seed Categories
-//     for (const category of categoriesData) {
-//       await db.insert(categories).values({
-//         id: uuidv4(),
-//         name: category.name,
-//         icon: category.icon,
-//         color: category.color,
-//       });
-//     }
-//     console.log('Categories seeded successfully');
+  console.log('Start seeding...');
 
-//     // Seed Languages
-//     for (const language of languagesData) {
-//       await db.insert(languages).values({
-//         id: uuidv4(),
-//         name: language.name,
-//         code: language.code,
-//         flag: language.flag,
-//       });
-//     }
-//     console.log('Languages seeded successfully');
+  // Seed Categories
+  for (const category of categories) {
+    await prisma.category.create({
+      data: category
+    });
+  }
+  console.log('Categories seeded successfully');
 
-//     console.log('Seeding finished.');
-//   } catch (error) {
-//     console.error('Error seeding database:', error);
-//     process.exit(1);
-//   }
-// }
+  // Seed Languages
+  for (const language of languages) {
+    await prisma.language.create({
+      data: language
+    });
+  }
+  console.log('Languages seeded successfully');
 
-// main().catch((e) => {
-//   console.error(e);
-//   process.exit(1);
-// });
+  console.log('Seeding finished.');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

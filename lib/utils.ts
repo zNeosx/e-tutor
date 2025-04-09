@@ -80,3 +80,12 @@ export const formatPageName = (name: string) => {
     })
     .join(' ');
 };
+
+export const generateSlug = async (title: string) => {
+  return title
+    .toLowerCase() // Convert to lowercase
+    .trim() // Remove leading/trailing whitespace
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
+};

@@ -1,9 +1,9 @@
 import CreateNewCourseTab from './CreateNewCourseTab';
 
-const CreateNewCourseContainer = () => {
+const CreateNewCourseContainer = ({ slug }: { slug: string }) => {
   return (
     <div className="overflow-hidden bg-white">
-      <CreateNewCourseTab />
+      <CreateNewCourseTab slug={slug} />
     </div>
   );
 };

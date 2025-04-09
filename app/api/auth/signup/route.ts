@@ -1,93 +1,68 @@
-import { hash } from 'bcryptjs';
-import { NextRequest, NextResponse } from 'next/server';
-import { UserRole } from '@prisma/client';
 import { signIn } from '@/auth';
-import { ZodError } from 'zod';
-import { signUpQuerySchema } from '@/lib/validations';
-import { Prisma } from '@prisma/client';
-import { createInstructor, createUser } from '@/lib/db/queries/insert';
+import { SignUpUseCase } from '@/src/application/usecases/sign-up.use-case';
+import {
+  ConflictError,
+  InputParseError,
+} from '@/src/domain/entities/errors/common';
+import { UserRepository } from '@/src/infrastructure/repositories/user.repository';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  const { firstName, lastName, userName, email, password, role } = body;
+
+  const userRepository = new UserRepository();
+  const signUpUseCase = new SignUpUseCase(userRepository);
+
   try {
-    const body = await request.json();
+    const newUser = await signUpUseCase.execute({
+      firstName,
+      lastName,
+      userName,
+      email,
+      password,
+      role,
+    });
 
-    try {
-      signUpQuerySchema.parse(body);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return NextResponse.json(
-          { error: 'Invalid input data', details: error.errors },
-          { status: 400 }
-        );
-      }
-    }
+    const signInResult = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    });
 
-    const { firstName, lastName, userName, email, password, role } = body;
-
-    const hashedPassword = await hash(password, 10);
-    const checkedRole = role === UserRole.ADMIN ? UserRole.STUDENT : role;
-
-    try {
-      const user = await createUser({
-        firstName,
-        lastName,
-        userName,
-        email,
-        password: hashedPassword,
-        role: checkedRole,
-      });
-
-      if (checkedRole === UserRole.INSTRUCTOR) {
-        await createInstructor({ userId: user.id });
-      }
-
-      const signInResult = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (signInResult.error) {
-        return NextResponse.json(
-          { error: 'Account created but failed to sign in' },
-          { status: 201 }
-        );
-      }
-
+    if (signInResult.error) {
       return NextResponse.json(
-        {
-          success: true,
-          user: {
-            role: user.role,
-            isFirstLogin: true,
-          },
-        },
+        { error: 'Account created but failed to sign in' },
         { status: 201 }
       );
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (error.code) {
-          case 'P2002': // Unique constraint violation
-            return NextResponse.json(
-              { error: 'Email or username already exists' },
-              { status: 409 }
-            );
-          default:
-            return NextResponse.json(
-              { error: 'Database error' },
-              { status: 500 }
-            );
-        }
-      }
-      return NextResponse.json(
-        { error: 'Database operation failed' },
-        { status: 500 }
-      );
     }
-  } catch (error) {
-    console.error('SIGNUP_ERROR:', error);
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        success: true,
+        user: {
+          role: newUser.role,
+          isFirstLogin: true,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error(err);
+    if (err instanceof InputParseError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+
+    if (err instanceof ConflictError) {
+      return NextResponse.json({ error: err.message }, { status: 409 });
+    }
+
+    return NextResponse.json(
+      {
+        error:
+          'An error happened while signing up. The developers have been notified. Please try again later.',
+      },
       { status: 500 }
     );
   }

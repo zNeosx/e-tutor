@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/db/queries/select';
+import { getCurrentUser } from '@/lib/db/queries/auth';
 import AccountSettingsForm from './AccountSettingsForm';
 
 const StudentAccountSettings = async () => {

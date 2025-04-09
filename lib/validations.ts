@@ -1,5 +1,5 @@
+import { UserRole } from '@/src/domain/entities/user';
 import { z } from 'zod';
-import { userRoleEnum } from './db/schema';
 
 export const signUpSchema = z
   .object({
@@ -72,5 +72,5 @@ export const signUpQuerySchema = z.object({
   userName: z.string().min(2).max(50),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(userRoleEnum.enumValues),
+  role: z.nativeEnum(UserRole),
 });

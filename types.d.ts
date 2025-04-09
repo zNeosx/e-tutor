@@ -1,6 +1,7 @@
 import { Icon } from '@phosphor-icons/react';
-import { UserRole } from '@prisma/client';
 import { JSX } from 'react';
+
+type UserRole = (typeof userRoleEnum.enumValues)[number];
 
 interface Category {
   id: number;

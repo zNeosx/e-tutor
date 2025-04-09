@@ -1,39 +1,25 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { Course, CourseLevel, DurationUnit } from '@prisma/client';
-import { auth } from '@/auth';
+import { courseCreateSchema } from '@/src/domain/entities/course';
 import { PrismaClientValidationError } from '@prisma/client/runtime/library';
+import { NextResponse } from 'next/server';
+import { CourseRepository } from '@/src/infrastructure/repositories/course.repository';
+import { auth } from '@/auth';
 
-// Define the schema directly in the API route instead of importing it
-const basicInformationSchema = z.object({
-  title: z.string().min(1).max(80),
-  subtitle: z.string().min(1).max(120),
-  category: z.string().min(1),
-  subCategory: z.string().min(1).optional(),
-  topic: z.string().min(1),
-  language: z.string().min(1),
-  subLanguage: z.string().optional(),
-  level: z.nativeEnum(CourseLevel),
-  duration: z.number().min(1),
-  durationUnit: z.nativeEnum(DurationUnit),
-});
+const courseRepository = new CourseRepository();
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-
-    console.log('session', session);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json();
 
-    // Validate the request body against our schema
-    const validatedData = basicInformationSchema.safeParse(body);
+    const session = await auth();
 
-    console.log('validatedData', validatedData);
+    if (!session) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    body.userId = session.user.id;
+
+    const validatedData = courseCreateSchema.safeParse(body);
+
     if (!validatedData.success) {
       return NextResponse.json(
         { error: 'Invalid data', details: validatedData.error },
@@ -41,33 +27,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create the course with basic information
-    const course = await prisma.course.create({
-      data: {
-        title: validatedData.data.title,
-        subtitle: validatedData.data.subtitle,
-        categoryId: validatedData.data.category,
-        subCategoryId: validatedData.data.subCategory,
-        topic: validatedData.data.topic,
-        languageId: validatedData.data.language,
-        subLanguageId: validatedData.data.subLanguage,
-        level: validatedData.data.level,
-        duration: validatedData.data.duration,
-        durationUnit: validatedData.data.durationUnit,
-        userId: session.user.id,
-        basicInformationCompleted: true,
-        thumbnail: null,
-      },
+    const course = await courseRepository.create({
+      course: validatedData.data,
+      userId: session.user.id,
     });
+    console.log('course from route', course);
 
     return NextResponse.json(course);
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.log('error', error.stack);
     if (error instanceof PrismaClientValidationError) {
-      return NextResponse.json(
-        { error: error., details: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

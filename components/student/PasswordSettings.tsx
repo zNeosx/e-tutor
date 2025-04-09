@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/db/queries/select';
+import { getCurrentUser } from '@/lib/db/queries/auth';
 import ResetPasswordForm from '../common/ResetPasswordForm';
 
 const PasswordSettings = async () => {

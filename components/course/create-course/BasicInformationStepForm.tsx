@@ -20,93 +20,45 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { useCourseMetadata } from '@/hooks/use-course-metadata';
 import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Course, CourseLevel, DurationUnit } from '@prisma/client';
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
-export const basicInformationSchema = z.object({
-  title: z.string().min(1).max(80),
-  subtitle: z.string().min(1).max(120),
-  category: z.string().min(1),
-  subCategory: z.string().min(1).optional(),
-  topic: z.string().min(1),
-  language: z.string().min(1),
-  subLanguage: z.string().optional(),
-  level: z.nativeEnum(CourseLevel),
-  duration: z.number().min(1),
-  durationUnit: z.nativeEnum(DurationUnit),
-});
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface Language {
-  id: string;
-  name: string;
-  code: string;
-}
+import { courseCreateSchema } from '@/src/domain/entities/course';
 
 interface BasicInformationStepFormProps {
   course?: Course;
 }
 
+const basicInformationSchema = courseCreateSchema.omit({ userId: true });
 const BasicInformationStepForm = ({
   course,
 }: BasicInformationStepFormProps) => {
   const { currentStep, setStepCompleted, setNextStep, resetStore } =
     useCreateCourseStepStore();
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { categories, languages, isLoading, error } = useCourseMetadata();
 
   const form = useForm<z.infer<typeof basicInformationSchema>>({
     resolver: zodResolver(basicInformationSchema),
     defaultValues: {
       title: course?.title ?? '',
       subtitle: course?.subtitle ?? '',
-      category: course?.categoryId ?? '',
-      subCategory: course?.subCategoryId ?? '',
+      categoryId: course?.categoryId,
+      subCategoryId: course?.subCategoryId,
       topic: course?.topic ?? '',
-      language: course?.languageId ?? '',
-      subLanguage: course?.subLanguageId ?? '',
+      languageId: course?.languageId,
+      subLanguageId: course?.subLanguageId,
       level: course?.level ?? CourseLevel.BEGINNER,
       duration: course?.duration ?? 1,
       durationUnit: course?.durationUnit ?? DurationUnit.DAYS,
     },
   });
 
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const response = await fetch('/api/course-metadata');
-        const data = await response.json();
-        setCategories(data.categories);
-        setLanguages(data.languages);
-      } catch (error) {
-        console.error('Failed to fetch course metadata:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load form data',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMetadata();
-  }, []);
-
   async function onSubmit(values: z.infer<typeof basicInformationSchema>) {
     try {
-      // console.log('values', values);
-      // return;
       const method = course ? 'PATCH' : 'POST';
       const url = course ? `/api/courses/${course.id}` : '/api/courses';
 
@@ -124,19 +76,11 @@ const BasicInformationStepForm = ({
         throw new Error(data.error || 'Something went wrong');
       }
 
-      // Update step completion status
       setStepCompleted(currentStep.id, true);
-
-      // Store course ID in localStorage for future steps
-      // localStorage.setItem('currentCourseId', data.id);
-
-      // Show success message
       toast({
         title: 'Success',
         description: `Course ${course ? 'updated' : 'created'} successfully`,
       });
-
-      // Move to next step
       setNextStep();
     } catch (error) {
       console.error(error);
@@ -148,8 +92,12 @@ const BasicInformationStepForm = ({
     }
   }
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+
+  if (error) {
+    return <div>Error loading form data. Please try again.</div>;
   }
 
   return (
@@ -204,7 +152,7 @@ const BasicInformationStepForm = ({
         <div className="grid grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="category"
+            name="categoryId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Category</FormLabel>
@@ -215,11 +163,23 @@ const BasicInformationStepForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
+                    {categories
+                      .filter(
+                        (category) =>
+                          category.id !== form.watch('subCategoryId')
+                      )
+                      .map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.icon} {category.name}
+                        </SelectItem>
+                      ))}
+                    {categories.filter(
+                      (category) => category.id !== form.watch('subCategoryId')
+                    ).length === 0 && (
+                      <SelectItem value="null" disabled>
+                        No categories available
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -229,22 +189,64 @@ const BasicInformationStepForm = ({
 
           <FormField
             control={form.control}
-            name="subCategory"
+            name="subCategoryId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Sub-category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a sub-category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="web">Web Development</SelectItem>
-                    <SelectItem value="mobile">Mobile Development</SelectItem>
-                    <SelectItem value="game">Game Development</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a sub-category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories
+                        .filter(
+                          (category) => category.id !== form.watch('categoryId')
+                        )
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.icon} {category.name}
+                          </SelectItem>
+                        ))}
+                      {categories.filter(
+                        (category) => category.id !== form.watch('categoryId')
+                      ).length === 0 && (
+                        <SelectItem value="null" disabled>
+                          No sub-categories available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {field.value && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-8 top-0 h-full px-2 py-0"
+                      onClick={() => field.onChange(undefined)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </Button>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -271,7 +273,7 @@ const BasicInformationStepForm = ({
         <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
           <FormField
             control={form.control}
-            name="language"
+            name="languageId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course Language</FormLabel>
@@ -282,11 +284,16 @@ const BasicInformationStepForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {languages.map((language) => (
-                      <SelectItem key={language.id} value={language.id}>
-                        {language.name}
-                      </SelectItem>
-                    ))}
+                    {languages
+                      .filter(
+                        (language) =>
+                          language.id !== form.watch('subLanguageId')
+                      )
+                      .map((language) => (
+                        <SelectItem key={language.id} value={language.id}>
+                          {language.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -295,24 +302,57 @@ const BasicInformationStepForm = ({
           />
           <FormField
             control={form.control}
-            name="subLanguage"
+            name="subLanguageId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Sub-language (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger disabled={isLoading}>
-                      <SelectValue placeholder="Select a sub-language" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {languages.map((language) => (
-                      <SelectItem key={language.id} value={language.id}>
-                        {language.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger disabled={isLoading}>
+                        <SelectValue placeholder="Select a sub-language" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {languages
+                        .filter(
+                          (language) => language.id !== form.watch('languageId')
+                        )
+                        .map((language) => (
+                          <SelectItem key={language.id} value={language.id}>
+                            {language.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {field.value && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-8 top-0 h-full px-2 py-0"
+                      onClick={() => field.onChange(undefined)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </Button>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -341,24 +381,6 @@ const BasicInformationStepForm = ({
             )}
           />
 
-          {/* <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Course Duration</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="Enter duration"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
           <FormField
             control={form.control}
             name="duration"
@@ -388,7 +410,11 @@ const BasicInformationStepForm = ({
           <Button variant="outline" onClick={() => resetStore()}>
             Cancel
           </Button>
-          <Button type="submit" disabled={currentStep.isCompleted}>
+          <Button
+            type="submit"
+            disabled={currentStep.isCompleted}
+            isLoading={form.formState.isSubmitting}
+          >
             Save & Next
           </Button>
         </div>

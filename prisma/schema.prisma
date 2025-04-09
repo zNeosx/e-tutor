@@ -14,64 +14,52 @@ enum UserRole {
 }
 
 model User {
-  id                   String       @id @default(cuid())
-  firstName            String       @map("first_name")
-  lastName             String       @map("last_name")
-  userName             String       @unique @map("user_name")
-  email                String       @unique
-  emailVerified        DateTime?    @map("email_verified")
+  id                   String    @id @default(cuid())
+  firstName            String    @map("first_name")
+  lastName             String    @map("last_name")
+  userName             String    @unique @map("user_name")
+  email                String    @unique
+  emailVerified        DateTime? @map("email_verified")
   password             String
-  role                 UserRole     @default(STUDENT)
+  role                 UserRole  @default(STUDENT)
   avatar               String?
   title                String?
-  isProfileCompleted   Boolean?     @default(false) @map("is_profile_completed")
-  resetPasswordToken   String?      @unique
+  biography            String?
+  phoneNumber          String?   @map("phone_number")
+  isProfileCompleted   Boolean?  @default(false) @map("is_profile_completed")
+  resetPasswordToken   String?   @unique
   resetPasswordExpires DateTime?
-  createdAt            DateTime     @default(now()) @map("created_at")
-  updatedAt            DateTime     @updatedAt @map("updated_at")
-  lastSigned           DateTime?    @map("last_signed")
-  instructor           Instructor?
-  socialLinks          SocialLinks?
-  coursesTaught        Course[]     @relation("CourseToInstructors")
-  coursesCreated       Course[]     @relation("CoursesToUser")
-  reviews              Review[]     @relation("ReviewsToUser")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  lastSigned           DateTime? @map("last_signed")
+  courses              Course[]
 
   @@map("users")
 }
 
-model Instructor {
-  id          String  @id @default(cuid())
-  biography   String?
-  phoneNumber String? @map("phone_number")
-  userId      String  @unique
-  user        User    @relation(fields: [userId], references: [id])
+// model SocialLinks {
+//   id        String  @id @default(cuid())
+//   userId    String  @unique
+//   user      User    @relation(fields: [userId], references: [id])
+//   website   String?
+//   facebook  String?
+//   instagram String?
+//   linkedin  String?
+//   twitter   String?
+//   whatsapp  String?
+//   youtube   String?
+//   github    String?
 
-  @@map("instructors")
-}
-
-model SocialLinks {
-  id        String  @id @default(cuid())
-  userId    String  @unique
-  user      User    @relation(fields: [userId], references: [id])
-  website   String?
-  facebook  String?
-  instagram String?
-  linkedin  String?
-  twitter   String?
-  whatsapp  String?
-  youtube   String?
-  github    String?
-
-  @@map("social_links")
-}
+//   @@map("social_links")
+// }
 
 model Category {
   id                   String   @id @default(cuid())
   name                 String   @unique
   icon                 String
   color                String
-  coursesAsCategory    Course[] @relation("CoursesToCategory")
-  coursesAsSubCategory Course[] @relation("CoursesToSubCategory")
+  CoursesToCategory    Course[] @relation("CoursesToCategory")
+  CoursesToSubCategory Course[] @relation("CoursesToSubCategory")
 
   @@map("categories")
 }
@@ -86,46 +74,44 @@ model Course {
   status CourseStatus @default(DRAFT)
 
   // Basic Information Fields (Step 1)
-  title                     String? // Required only when publishing
-  subtitle                  String? // Required only when publishing
-  categoryId                String? // Required only when publishing
+  title                     String
+  subtitle                  String?
+  categoryId                String?
   category                  Category?     @relation("CoursesToCategory", fields: [categoryId], references: [id])
   subCategoryId             String?
   subCategory               Category?     @relation("CoursesToSubCategory", fields: [subCategoryId], references: [id])
-  topic                     String? // Required only when publishing
-  languageId                String? // Required only when publishing
+  topic                     String?
+  languageId                String?
   language                  Language?     @relation("CoursesToLanguage", fields: [languageId], references: [id])
   subLanguageId             String?
   subLanguage               Language?     @relation("CoursesToSubLanguage", fields: [subLanguageId], references: [id])
-  level                     CourseLevel? // Required only when publishing
-  duration                  Int? // Required only when publishing
-  durationUnit              DurationUnit? // Required only when publishing
-  basicInformationCompleted Boolean       @default(false) @map("basic_information_completed")
+  level                     CourseLevel?
+  duration                  Int?
+  durationUnit              DurationUnit?
+  basicInformationCompleted Boolean?      @default(false) @map("basic_information_completed")
 
   // Advanced Information Fields (Step 2)
-  thumbnail                   String? // Required only when publishing
-  trailer                     String? // Required only when publishing
-  description                 String? // Required only when publishing
-  whatYouWillLearn            String[]
-  targetAudience              String[]
-  requirements                String[]
-  welcomeMessage              String? // Required only when publishing
-  congratulationsMessage      String? // Required only when publishing
-  price                       Float?
-  currency                    String?  @default("USD")
-  advanceInformationCompleted Boolean  @default(false) @map("advance_information_completed")
+  // thumbnail                   String? @D
+  // trailer                     String? 
+  // description                 String? 
+  // whatYouWillLearn            String[]
+  // targetAudience              String[]
+  // requirements                String[]
+  // welcomeMessage              String? 
+  // congratulationsMessage      String? 
+  // price                       Float?
+  // currency                    String?  @default("USD")
+  // advanceInformationCompleted Boolean  @default(false) @map("advance_information_completed")
 
-  // Curriculum Fields (Step 3)
-  sections            CourseSection[]
-  curriculumCompleted Boolean         @default(false) @map("curriculum_completed")
+  // // Curriculum Fields (Step 3)
+  // sections            CourseSection[]
+  // curriculumCompleted Boolean         @default(false) @map("curriculum_completed")
 
-  // Other Fields
-  instructors User[]   @relation("CourseToInstructors")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String   @map("user_id")
-  user        User     @relation("CoursesToUser", fields: [userId], references: [id])
-  reviews     Review[]
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("courses")
 }
@@ -147,54 +133,74 @@ model Language {
   name                 String   @unique
   code                 String   @unique
   flag                 String
-  coursesAsLanguage    Course[] @relation("CoursesToLanguage")
-  coursesAsSubLanguage Course[] @relation("CoursesToSubLanguage")
+  CoursesToLanguage    Course[] @relation("CoursesToLanguage")
+  CoursesToSubLanguage Course[] @relation("CoursesToSubLanguage")
 
   @@map("languages")
 }
 
-model CourseSection {
-  id       String          @id @default(cuid())
-  name     String
-  courseId String
-  course   Course          @relation(fields: [courseId], references: [id])
-  contents CourseContent[]
+// model CourseSection {
+//   id       String          @id @default(cuid())
+//   name     String
+//   courseId String
+//   course   Course          @relation(fields: [courseId], references: [id])
+//   contents CourseContent[]
 
-  @@map("course_sections")
-}
+//   @@map("course_sections")
+// }
 
-model CourseContent {
-  id          String        @id @default(cuid())
-  sectionId   String
-  section     CourseSection @relation(fields: [sectionId], references: [id])
-  video       String?
-  file        String?
-  quote       String?
-  description String?
-  lectureNote LectureNote?
+// model CourseContent {
+//   id          String        @id @default(cuid())
+//   sectionId   String
+//   section     CourseSection @relation(fields: [sectionId], references: [id])
+//   video       String?
+//   file        String?
+//   quote       String?
+//   description String?
+//   lectureNote LectureNote?
 
-  @@map("course_contents")
-}
+//   @@map("course_contents")
+// }
 
-model LectureNote {
-  id        String        @id @default(cuid())
-  contentId String        @unique
-  content   CourseContent @relation(fields: [contentId], references: [id])
-  text      String
-  file      String?
+// model LectureNote {
+//   id        String        @id @default(cuid())
+//   contentId String        @unique
+//   content   CourseContent @relation(fields: [contentId], references: [id])
+//   text      String
+//   file      String?
 
-  @@map("lecture_notes")
-}
+//   @@map("lecture_notes")
+// }
 
-model Review {
-  id        Int      @id @default(autoincrement())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-  userId    String
-  user      User     @relation("ReviewsToUser", fields: [userId], references: [id])
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now())
+// model Review {
+//   id        Int      @id @default(autoincrement())
+//   courseId  String
+//   course    Course   @relation(fields: [courseId], references: [id])
+//   userId    String
+//   user      User     @relation("ReviewsToUser", fields: [userId], references: [id])
+//   rating    Int
+//   comment   String
+//   createdAt DateTime @default(now())
 
-  @@unique([courseId, userId]) // Un utilisateur ne peut laisser qu'un seul avis par cours
-}
+//   @@unique([courseId, userId]) // Un utilisateur ne peut laisser qu'un seul avis par cours
+// }
+
+// model UserCourse {
+//   id         String           @id @default(cuid())
+//   userId     String
+//   courseId   String
+//   user       User             @relation(fields: [userId], references: [id])
+//   course     Course           @relation(fields: [courseId], references: [id])
+//   enrolledAt DateTime         @default(now())
+//   progress   Float            @default(0)
+//   status     EnrollmentStatus @default(ACTIVE)
+
+//   @@unique([userId, courseId])
+//   @@map("user_courses")
+// }
+
+// enum EnrollmentStatus {
+//   ACTIVE
+//   COMPLETED
+//   DROPPED
+// }

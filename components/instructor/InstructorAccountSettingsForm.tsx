@@ -17,20 +17,13 @@ import { Input } from '@/components/ui/input';
 
 import { FIELD_NAMES, FIELD_PLACEHOLDERS, FIELD_TYPES } from '@/constants';
 import { toast } from '@/hooks/use-toast';
-import { updateInstructor } from '@/lib/actions/user.action';
 import { instructorAccountSchema } from '@/lib/validations';
-import { Instructor, User } from '@prisma/client';
 import FileUpload from '../FileUpload';
 import PhoneNumberInput from '../ui/phone-input';
 import { Textarea } from '../ui/textarea';
+import { User } from '@/src/domain/entities/user';
 
-type UserWithOptionalInstructor = User & { instructor?: Instructor | null };
-
-const InstructorAccountSettingsForm = ({
-  user,
-}: {
-  user: UserWithOptionalInstructor;
-}) => {
+const InstructorAccountSettingsForm = ({ user }: { user: User }) => {
   const form = useForm<z.infer<typeof instructorAccountSchema>>({
     resolver: zodResolver(instructorAccountSchema),
     defaultValues: {
@@ -40,28 +33,44 @@ const InstructorAccountSettingsForm = ({
       email: user.email,
       title: user.title ?? '',
       avatar: user.avatar ?? undefined,
-      phoneNumber: user.instructor?.phoneNumber ?? '',
-      biography: user.instructor?.biography ?? '',
+      phoneNumber: user.phoneNumber ?? '',
+      biography: user.biography ?? '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof instructorAccountSchema>) {
-    const result = await updateInstructor({
-      id: user.id,
-      data: values,
-    });
-
-    if (result.success) {
-      toast({
-        title: 'Success',
-        description: 'Account updated successfully',
+    console.log('values', values);
+    try {
+      const response = await fetch('/api/users/instructor/account/settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: user.id, ...values }),
       });
-    } else {
+
+      const res = await response.json();
+
+      console.log('response', res);
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Account updated successfully',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: res.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
       toast({
         title: `Error while updating your account`,
-        description: result.error ?? 'An error occurred',
+        description: 'An error occurred',
         variant: 'destructive',
       });
+      console.log('error', error);
     }
   }
 

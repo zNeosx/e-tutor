@@ -88,8 +88,8 @@
 //   data?: User;
 // }> => {
 //   const { id, data } = params;
-// const authCheck = await checkAuthorization(id);
-// if (!authCheck.success) return authCheck;
+//   const authCheck = await checkAuthorization(id);
+//   if (!authCheck.success) return authCheck;
 
 //   try {
 //     const user = await prisma.user.update({

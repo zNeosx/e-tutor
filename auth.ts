@@ -1,11 +1,12 @@
-import { UserRole } from '@prisma/client';
 import { compare } from 'bcryptjs';
 import NextAuth, { AuthError, CredentialsSignin, User } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { signInSchema } from './lib/validations';
-import { db } from './lib/db';
-import { eq } from 'drizzle-orm';
-import { usersTable } from './lib/db/schema';
+import { UserRepository } from './src/infrastructure/repositories/user.repository';
+import { InputParseError } from './src/domain/entities/errors/common';
+import { UserRole } from './src/domain/entities/user';
+
+const userRepository = new UserRepository();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
@@ -22,12 +23,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const validatedSchema = signInSchema.parse(credentials);
+        const { data: validatedSchema, error: inputParseError } =
+          signInSchema.safeParse(credentials);
 
-        const [user] = await db
-          .select()
-          .from(usersTable)
-          .where(eq(usersTable.email, validatedSchema.email));
+        if (inputParseError) {
+          throw new InputParseError('invalid input data', {
+            cause: inputParseError,
+          });
+        }
+
+        const user = await userRepository.findByEmail(validatedSchema.email);
 
         if (!user) throw new CredentialsSignin('Invalid credentials');
 
@@ -38,10 +43,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isPasswordValid) throw new AuthError('Invalid credentials');
 
-        await db
-          .update(usersTable)
-          .set({ lastSigned: new Date() })
-          .where(eq(usersTable.email, user.email));
+        await userRepository.update(user.id, {
+          lastSigned: new Date(),
+        });
 
         return {
           id: user.id,

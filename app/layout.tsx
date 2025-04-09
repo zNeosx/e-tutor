@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/auth';
 import GlobalModal from '@/components/GlobalModal';
+import Providers from '@/components/Providers';
 
 const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800', '900'],
@@ -26,11 +27,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <SessionProvider session={session}>
-        <body className={`${inter.className} antialiased`}>
-          {children}
-          <Toaster />
-          <GlobalModal />
-        </body>
+        <Providers>
+          <body className={`${inter.className} antialiased`}>
+            {children}
+            <Toaster />
+            <GlobalModal />
+          </body>
+        </Providers>
       </SessionProvider>
     </html>
   );

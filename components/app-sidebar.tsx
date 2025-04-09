@@ -18,7 +18,6 @@ import {
   ChatCircleDots,
   CreditCard,
   Gear,
-  PlusCircle,
   SignOut,
   Stack,
 } from '@phosphor-icons/react';
@@ -36,17 +35,17 @@ const items = [
     icon: ChartBar,
     isAvailable: false,
   },
-  {
-    title: 'Create New Course',
-    url: 'courses/new',
-    icon: PlusCircle,
-    isAvailable: true,
-  },
+  // {
+  //   title: 'Create New Course',
+  //   url: 'courses/new',
+  //   icon: PlusCircle,
+  //   isAvailable: true,
+  // },
   {
     title: 'My Courses',
-    url: 'my-courses',
+    url: 'courses',
     icon: Stack,
-    isAvailable: false,
+    isAvailable: true,
   },
   {
     title: 'Earning',
