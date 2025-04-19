@@ -17,7 +17,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
-import { useModalStore } from '@/store/UseModalStore';
+import { useModalStore } from '@/lib/store/UseModalStore';
 import ResetPasswordModal from './modals/ResetPasswordModal';
 
 export default function GlobalModal() {

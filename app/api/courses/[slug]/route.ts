@@ -53,7 +53,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  console.log('body', body);
+
   const validatedBody = courseUpdateSchema.parse(body);
+
+  console.log('validatedBody', validatedBody);
 
   const updatedCourse = await courseRepository.update({
     ...validatedBody,

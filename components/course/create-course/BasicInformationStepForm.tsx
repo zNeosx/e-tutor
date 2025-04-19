@@ -26,8 +26,9 @@ import { Course, CourseLevel, DurationUnit } from '@prisma/client';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { basicInformationSchema } from '@/src/domain/entities/course';
-import { useCourseProgressStore } from '@/src/store/course-progress.store';
+// import { useCourseProgressStore } from '@/lib/store/course-progress.store';
 import React from 'react';
+import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
 
 interface BasicInformationStepFormProps {
   course?: Course;
@@ -40,7 +41,8 @@ const BasicInformationStepForm = ({
   //   useCreateCourseStepStore();
 
   const { categories, languages, isLoading, error } = useCourseMetadata();
-  const { updateBasicInformation } = useCourseProgressStore();
+  // const { updateBasicInformation } = useCourseProgressStore();
+  const { setNextStep } = useCreateCourseStepStore();
 
   const defaultValues = React.useMemo(
     () => ({
@@ -63,20 +65,26 @@ const BasicInformationStepForm = ({
     defaultValues,
   });
 
-  React.useEffect(() => {
-    updateBasicInformation(defaultValues);
-  }, [updateBasicInformation, defaultValues]);
+  // React.useEffect(() => {
+  //   updateBasicInformation(defaultValues);
+  // }, [updateBasicInformation, defaultValues]);
 
-  React.useEffect(() => {
-    const subscription = form.watch((data) => {
-      updateBasicInformation(data);
-    });
-    return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.watch]);
+  // React.useEffect(() => {
+  //   const subscription = form.watch((data) => {
+  //     updateBasicInformation(data);
+  //   });
+  //   return () => subscription.unsubscribe();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [form.watch]);
+
+  console.log('render');
 
   async function onSubmit(values: z.infer<typeof basicInformationSchema>) {
     try {
+      if (Object.keys(form.formState.dirtyFields).length === 0) {
+        setNextStep();
+        return;
+      }
       const method = 'PATCH';
       const url = `/api/courses/${course?.slug}`;
 
@@ -95,6 +103,7 @@ const BasicInformationStepForm = ({
       }
 
       // setStepCompleted(currentStep.id, true);
+      setNextStep();
       toast({
         title: 'Success',
         description: `Course updatedsuccessfully`,
@@ -444,7 +453,7 @@ const BasicInformationStepForm = ({
           <Button variant="outline">Cancel</Button>
           <Button
             type="submit"
-            // disabled={currentStep.isCompleted}
+            disabled={form.formState.isSubmitting}
             isLoading={form.formState.isSubmitting}
           >
             Save & Next

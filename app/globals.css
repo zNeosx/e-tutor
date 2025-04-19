@@ -148,6 +148,9 @@ body {
     @apply leading-[22px] font-medium;
   }
 
+  .body-xl-500 {
+    @apply text-lg font-medium;
+  }
   .body-xxl-600 {
     @apply text-xl leading-7 font-semibold;
   }
@@ -202,7 +205,7 @@ body {
     @apply px-10 py-6;
   }
   .cc-content {
-    @apply px-10 pt-8 pb-10;
+    @apply px-6 xl:px-10 pt-8 pb-10;
   }
 }
 

@@ -36,6 +36,12 @@ export class CourseRepository implements ICourseRepository {
           status: 'DRAFT',
           slug,
         },
+        include: {
+          category: true,
+          subCategory: true,
+          language: true,
+          subLanguage: true,
+        },
       });
 
       if (!createdCourse) {
@@ -60,19 +66,25 @@ export class CourseRepository implements ICourseRepository {
       // }
 
       const filteredData = filterEmptyValues(course);
-
+      console.log('filteredData', filteredData);
       const updatedCourse = await prisma.course.update({
         where: { slug: course.slug },
         data: {
           ...filteredData,
           basicInformationCompleted: validation.isValid,
         },
+        include: {
+          category: true,
+          subCategory: true,
+          language: true,
+          subLanguage: true,
+        },
       });
 
       if (!updatedCourse) {
         throw new DatabaseOperationError('Failed to update course');
       }
-
+      console.log('updatedCourse', updatedCourse);
       return updatedCourse;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -96,6 +108,12 @@ export class CourseRepository implements ICourseRepository {
     try {
       const course = await prisma.course.findUnique({
         where: { id },
+        include: {
+          category: true,
+          subCategory: true,
+          language: true,
+          subLanguage: true,
+        },
       });
 
       if (!course) {
@@ -114,6 +132,12 @@ export class CourseRepository implements ICourseRepository {
     try {
       const course = await prisma.course.findUnique({
         where: { slug },
+        include: {
+          category: true,
+          subCategory: true,
+          language: true,
+          subLanguage: true,
+        },
       });
 
       if (!course) {

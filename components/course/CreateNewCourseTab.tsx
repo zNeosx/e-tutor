@@ -2,15 +2,18 @@
 import { Course } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import Loader from '../common/Loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import BasicInformationStep from './create-course/BasicInformationStep';
 import AdvanceInformationStep from './create-course/AdvanceInformationStep';
 import { Clipboard, Stack } from '@phosphor-icons/react';
-import { useCourseProgressStore } from '@/src/store/course-progress.store';
+import { useCourseProgressStore } from '@/lib/store/course-progress.store';
+import { useCreateCourseStepStore } from '@/lib/store/use-course-step-store';
+import { Step } from '@/constants';
+import Loader from '../common/Loader';
 
 const CreateNewCourseTab = ({ slug }: { slug: string }) => {
   const progressStore = useCourseProgressStore();
+  const { currentStep, setCurrentStep } = useCreateCourseStepStore();
 
   const query = useQuery({
     queryKey: ['course', slug],
@@ -97,10 +100,20 @@ const CreateNewCourseTab = ({ slug }: { slug: string }) => {
   const tabsTriggerIconClassName = 'size-6 text-gray-600';
 
   return (
-    <Tabs className="w-full" defaultValue="basic">
+    <Tabs
+      className="w-full"
+      value={currentStep}
+      onValueChange={(value) => {
+        setCurrentStep(value as Step);
+      }}
+    >
       <TabsList className="h-auto w-full rounded-none bg-transparent p-0">
-        <TabsTrigger value="basic" className={tabsTriggerClassName} asChild>
-          <div className="flex items-center justify-between">
+        <TabsTrigger
+          value={Step.BASIC_INFORMATION}
+          className={tabsTriggerClassName}
+          asChild
+        >
+          <div className="flex cursor-pointer items-center justify-between">
             <span className="inline-flex items-center gap-2">
               <Stack className={tabsTriggerIconClassName} /> Basic Information
             </span>
@@ -110,17 +123,26 @@ const CreateNewCourseTab = ({ slug }: { slug: string }) => {
             </span>
           </div>
         </TabsTrigger>
-        <TabsTrigger value="advance" className={tabsTriggerClassName}>
+        <TabsTrigger
+          value={Step.ADVANCE_INFORMATION}
+          className={tabsTriggerClassName}
+        >
           <div className="flex items-center gap-2">
             <Clipboard className={tabsTriggerIconClassName} /> Advance
             Information
           </div>
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="basic" className={tabsContentClassName}>
+      <TabsContent
+        value={Step.BASIC_INFORMATION}
+        className={tabsContentClassName}
+      >
         <BasicInformationStep course={course} />
       </TabsContent>
-      <TabsContent value="advance" className={tabsContentClassName}>
+      <TabsContent
+        value={Step.ADVANCE_INFORMATION}
+        className={tabsContentClassName}
+      >
         <AdvanceInformationStep course={course} />
       </TabsContent>
     </Tabs>

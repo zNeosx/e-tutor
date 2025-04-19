@@ -27,7 +27,7 @@ import {
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import PasswordInput from '../ui/password-input';
-import { useModalStore } from '@/store/UseModalStore';
+import { useModalStore } from '@/lib/store/UseModalStore';
 
 interface Props<T extends FieldValues> {
   type: 'SIGN_UP' | 'SIGN_IN';

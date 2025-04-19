@@ -2,7 +2,7 @@ import { getCurrentUser } from '@/lib/db/queries/auth';
 import AccountSettingsForm from './AccountSettingsForm';
 
 const StudentAccountSettings = async () => {
-  const user = await getCurrentUser();
+  const { user } = await getCurrentUser();
 
   return (
     <section className="student-section">

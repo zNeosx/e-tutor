@@ -29,11 +29,11 @@ interface ModalProps {
   content?: React.ReactNode;
 }
 
-export type Step = {
-  id: string;
-  name: string;
-  icon: Icon;
-  index: number;
-  isCompleted?: boolean;
-  component: () => JSX.Element;
-};
+// export type Step = {
+//   id: string;
+//   name: string;
+//   icon: Icon;
+//   index: number;
+//   isCompleted?: boolean;
+//   component: () => JSX.Element;
+// };

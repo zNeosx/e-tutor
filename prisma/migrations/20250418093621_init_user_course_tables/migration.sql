@@ -48,7 +48,7 @@ CREATE TABLE "categories" (
 CREATE TABLE "courses" (
     "id" TEXT NOT NULL,
     "status" "CourseStatus" NOT NULL DEFAULT 'DRAFT',
-    "title" TEXT,
+    "title" TEXT NOT NULL,
     "subtitle" TEXT,
     "categoryId" TEXT,
     "subCategoryId" TEXT,
@@ -58,9 +58,17 @@ CREATE TABLE "courses" (
     "level" "CourseLevel",
     "duration" INTEGER,
     "durationUnit" "DurationUnit",
-    "basic_information_completed" BOOLEAN NOT NULL DEFAULT false,
+    "basic_information_completed" BOOLEAN DEFAULT false,
+    "thumbnail" TEXT,
+    "trailer" TEXT,
+    "description" TEXT,
+    "whatYouWillLearn" TEXT[],
+    "targetAudience" TEXT[],
+    "requirements" TEXT[],
+    "slug" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "courses_pkey" PRIMARY KEY ("id")
 );
@@ -88,6 +96,9 @@ CREATE UNIQUE INDEX "users_resetPasswordToken_key" ON "users"("resetPasswordToke
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "courses_slug_key" ON "courses"("slug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "languages_name_key" ON "languages"("name");
 
 -- CreateIndex
@@ -104,3 +115,6 @@ ALTER TABLE "courses" ADD CONSTRAINT "courses_languageId_fkey" FOREIGN KEY ("lan
 
 -- AddForeignKey
 ALTER TABLE "courses" ADD CONSTRAINT "courses_subLanguageId_fkey" FOREIGN KEY ("subLanguageId") REFERENCES "languages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "courses" ADD CONSTRAINT "courses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

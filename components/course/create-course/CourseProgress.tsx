@@ -1,4 +1,4 @@
-import { useCourseProgressStore } from '@/src/store/course-progress.store';
+import { useCourseProgressStore } from '@/lib/store/course-progress.store';
 
 export const CourseProgress = () => {
   const { basicInformation, totalProgress } = useCourseProgressStore();

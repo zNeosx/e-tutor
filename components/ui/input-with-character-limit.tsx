@@ -18,7 +18,7 @@ export default function InputWithCharacterLimit({
   const id = useId();
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <Input
         id={id}
         className="peer pe-14"

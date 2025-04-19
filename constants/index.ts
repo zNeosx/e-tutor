@@ -203,3 +203,10 @@ export const STUDENT_HEADER_LINKS = [
 //     component: PublishCourseStep,
 //   },
 // ];
+
+export enum Step {
+  BASIC_INFORMATION = 'basic-information',
+  ADVANCE_INFORMATION = 'advance-information',
+  CURRICULUM = 'curriculum',
+  PUBLISH_COURSE = 'publish-course',
+}
